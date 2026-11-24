@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, type ReactNode } from 'react';
 
 type Props = { open: boolean; labelledBy: string; onClose: () => void; children: ReactNode };

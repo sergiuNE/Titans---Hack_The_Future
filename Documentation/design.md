@@ -39,7 +39,7 @@ Lexend (400/500/700/800), designed for reading ease. It has a plain zero, which 
 
 ## Footer and favicon
 
-The caregiver view ends with a dark footer (`#17191e`): an outlined square logo with "Anker", a short description, and three columns (Pagina's, Voor wie, Project). No contact details or social links.
+The home and legal pages end with a dark footer (`#17191e`): an outlined square logo with "Anker", a short description, and three columns (Pagina's, Juridisch, Project). No contact details or social links.
 
 Favicon: a gold anchor (`#f5dd96`) on the morning ink colour (`#0f2c44`), `public/favicon.svg`.
 

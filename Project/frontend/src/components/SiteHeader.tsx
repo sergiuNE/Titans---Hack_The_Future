@@ -1,29 +1,37 @@
-import type { Route } from '../lib/store';
+'use client';
 
-const LINKS: { href: string; label: string; route: Route }[] = [
-  { href: '#/', label: 'Home', route: 'home' },
-  { href: '#/scherm', label: 'Wandscherm', route: 'scherm' },
-  { href: '#/zorg', label: 'Mantelzorger', route: 'zorg' },
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import type { Key } from '../lib/i18n';
+import { LangSwitch, useLang } from './LangProvider';
+
+const LINKS: { href: string; label: Key }[] = [
+  { href: '/', label: 'nav.home' },
+  { href: '/vandaag', label: 'nav.wall' },
+  { href: '/plan', label: 'nav.care' },
 ];
 
-export function SiteHeader({ route }: { route: Route }) {
+export function SiteHeader() {
+  const pathname = usePathname();
+  const { t } = useLang();
   return (
     <header className="site-header">
-      <a className="brand" href="#/">
+      <Link className="brand" href="/">
         <img src="/favicon.svg" alt="" width={32} height={32} />
         Anker
-      </a>
-      <nav aria-label="Hoofdmenu">
+      </Link>
+      <nav aria-label={t('nav.main')}>
         <ul>
           {LINKS.map((l) => (
             <li key={l.href}>
-              <a href={l.href} aria-current={route === l.route ? 'page' : undefined}>
-                {l.label}
-              </a>
+              <Link href={l.href} aria-current={pathname === l.href ? 'page' : undefined}>
+                {t(l.label)}
+              </Link>
             </li>
           ))}
         </ul>
       </nav>
+      <LangSwitch />
     </header>
   );
 }
