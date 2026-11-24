@@ -2,7 +2,7 @@
 
 Houvast voor wie de tijd kwijt is.
 
-Hack The Future 2026 · Little Miss Robot challenge "Claim de tijd terug!" · Team Titans: Laurens Rombout en Sergiu Neagu
+Gemaakt voor: Hack The Future 2026 · Little Miss Robot challenge "Claim de tijd terug!" · Team Titans
 
 ## Waarom wij dit bouwen
 
@@ -23,30 +23,32 @@ Ruim 200.000 mensen in België leven met dementie, en tegen 2040 worden dat er m
 
 | | Persoon met dementie | Mantelzorger |
 | --- | --- | --- |
-| Persona | **Maria, 78**: beginnende Alzheimer, woont alleen in Mortsel | **Els, 52**: dochter van Maria, werkt voltijds in Antwerpen |
+| Wie | 70+, thuiswonend, beginnende tot matige dementie | meestal een werkende dochter of zoon, soms de partner |
 | Toestel | tablet aan de muur, altijd aan | eigen smartphone |
 | Kan | lezen, een grote knop aantikken | plannen, opvolgen |
 | Nood | houvast, rust, herkenning | overzicht, geruststelling, minder telefoontjes |
 
 ## Concept
 
-Anker is een webapp met twee kanten. Els plant de dag op haar gsm. Maria ziet die dag rustig op haar tablet. Wat Maria afvinkt, ziet Els meteen. Anker zet verleden, heden en toekomst terug op hun plek: **Al gebeurd**, **Nu** en **Straks**.
+Anker is een webapp met twee kanten. De mantelzorger plant de dag op de gsm. De persoon met dementie ziet die dag rustig op een tablet. Wat op de tablet wordt afgevinkt, ziet de mantelzorger meteen. Anker zet verleden, heden en toekomst terug op hun plek: **Al gebeurd**, **Nu** en **Straks**.
 
 ### De website
 
 | Pagina | URL | Inhoud |
 | --- | --- | --- |
-| Home | `/` | Alleen de hero: "Houvast voor wie de tijd kwijt is", wat Anker is, knoppen naar beide schermen en een live mini-versie van het wandscherm |
+| Home | `/` | "Houvast voor wie de tijd kwijt is", wat Anker is, knoppen naar beide schermen en een live mini-versie van het wandscherm |
 | Privacybeleid | `/privacy` | Welke gegevens, waar ze staan (demo: op je toestel, met Supabase: in Supabase), cookies (geen), diensten van derden, je rechten |
 | Gebruiksvoorwaarden | `/voorwaarden` | Prototype, geen medisch hulpmiddel, geen garanties, aansprakelijkheid, Belgisch recht |
-| Wandscherm | `/vandaag` | Het scherm van Maria (tablet aan de muur) |
-| Mantelzorger | `/plan` | De plan-app van Els (gsm) |
+| Wandscherm | `/vandaag` | Het scherm voor de persoon met dementie (tablet aan de muur) |
+| Mantelzorger | `/plan` | De plan-app voor de mantelzorger (gsm) |
 
-Home, Privacybeleid en Gebruiksvoorwaarden hebben onderaan een footer: logo, korte omschrijving, Pagina's, Juridisch en Project. Het wandscherm en de mantelzorger-app hebben geen footer. Er staan geen contactgegevens, adres, ondernemingsnummer of sociale media in. Alle pagina's behalve het wandscherm hebben bovenaan een menubalk. Het wandscherm niet, want dat moet rustig blijven.
+Home, Privacybeleid en Gebruiksvoorwaarden hebben onderaan een footer zonder contactgegevens of sociale media. Het wandscherm heeft geen menubalk en geen footer, want dat moet rustig blijven. De mantelzorger-app heeft geen footer.
 
-### Wandscherm van Maria (`/vandaag`)
+Alles is beschikbaar in het Nederlands, Frans en Engels. De taal kies je per toestel ("NL · FR · EN" in de menubalk of onderaan het wandscherm). Alle teksten staan in `Project/frontend/src/lib/i18n.ts`.
 
-- **Leeg starten, geen voorbeelddata:** het scherm vraagt groot "Welkom bij Anker. Hoe heet je?" en bewaart de naam. Daarna begroet het: "Goedemorgen, Maria." De naam is later aan te passen via "Naam aanpassen" onderaan het scherm, of door de mantelzorger.
+### Wandscherm (`/vandaag`)
+
+- **Leeg starten, geen voorbeelddata:** het scherm vraagt groot "Welkom bij Anker. Hoe heet je?" en bewaart de naam. Daarna begroet het de persoon bij naam ("Goedemorgen, …"). De naam is later aan te passen via "Naam aanpassen" onderaan het scherm, of door de mantelzorger.
 - **Plan je dag:** meteen na de naam opent een popup. Je kiest een **datum** en vult de taken voor die dag in (wat, hoe laat, soort), met "+ Nog een taak" voor meer. De popup toont wat al op die dag gepland staat. Later opnieuw openen kan met "+ Dag plannen".
 - Een grote zin "Het is dinsdagmiddag." met de datum, een klok en het weer met een icoon (Open-Meteo, zonder sleutel; offline toont het scherm gewoon geen weer). 's Ochtends en 's middags staat er één warme weertip: "Het is koud buiten. Neem je warme jas.", "Het regent. Neem een paraplu mee." of "Het is warm. Drink genoeg water."
 - **Wie is dit?** Een bezoek met foto of initiaal is aan te tikken. Een rustig groot venster toont de foto, de naam en wie het is, bv. "Tom" en "je zoon" of "Lisa" en "thuisverpleging". De mantelzorger vult naam en relatie in bij het bezoek (optioneel).
@@ -57,33 +59,13 @@ Home, Privacybeleid en Gebruiksvoorwaarden hebben onderaan een footer: logo, kor
 - "Je pillen van vandaag": een vinkje met het uur ("Genomen om 08:35").
 - "Al gebeurd vandaag" met het uur waarop iets gedaan is ("Gedaan om 08:02"), en "Nog te komen", met een foto of de initiaal van wie er op bezoek komt.
 - **Vergist?** Bij elke afgevinkte taak staat "Toch niet". Een tik vraagt eerst: "Je tikte om 08:02 dat “Ochtendpillen” gedaan was. Is het toch nog niet gedaan?" De veilige keuze ("Nee, het is gedaan") heeft de focus, en Escape of naast het venster tikken verandert niets.
-- Nooit verwijtend: Maria ziet "Nog niet genomen", nooit "te laat".
+- Nooit verwijtend: het scherm zegt "Nog niet genomen", nooit "te laat".
 
-### Plan-app van Els (`/plan`)
+### Plan-app (`/plan`)
 
-- Ziet wat Maria nu ziet en hoeveel pillen er genomen zijn.
-- **Avondoverzicht:** de kaart "Vandaag bij Maria" toont "5 van 6 momenten gedaan" en wat nog open staat, met de belangrijke momenten aangeduid. Vanaf 18:00 staat die groot bovenaan, overdag als kleine samenvatting.
-- Krijgt een signaal als een **belangrijk** moment (pillen, voordeur op slot) een uur na tijd nog openstaat.
-- Voegt zoveel extra momenten toe als nodig: medicijn, maaltijd, bezoek (met foto, naam en relatie), afspraak (bv. kapper) of taak, eenmalig of elke dag.
-- Kan zelf afvinken of een vinkje ongedaan maken.
-- Past de naam van haar naaste aan (Instellingen). De naam wordt meteen bewaard en staat in de begroeting op het wandscherm.
-- **Zorgkring:** nodigt familie uit (bv. Tom), zodat iedereen hetzelfde overzicht heeft. In de demo is dit gemockt: er wordt nog niets verstuurd.
-- **Demo: spring in de tijd** (08:35, 15:00, 20:00, 23:30, +1 uur), zodat de hele dag in een paar minuten te tonen is. Het wandscherm springt mee.
-
-## Talen
-
-Anker is beschikbaar in het Nederlands (standaard), Frans en Engels. De taal kies je per toestel: met "NL · FR · EN" in de menubalk, of onderaan het wandscherm (naast de tekstgrootte). De keuze staat in `localStorage` (`anker:lang`) en wordt niet gesynchroniseerd, dus de tablet van Maria kan Frans zijn terwijl Els Nederlands gebruikt. Alle teksten staan in `Project/frontend/src/lib/i18n.ts`. Gebruikersgegevens (titels van taken, namen) worden niet vertaald. De voorbeelddag wordt geladen in de gekozen taal.
-
-## Demoscript
-
-1. Open `/vandaag` en `/plan` naast elkaar in dezelfde browser.
-2. Tablet: het scherm vraagt "Hoe heet je?". Typ "Maria". Het scherm zegt: "Goedemorgen, Maria. Het is dinsdagochtend."
-3. De popup "Plan je dag" opent: kies de datum, vul "Pillen nemen" (medicijn) en "Tom komt koffie drinken" (bezoek) in en bewaar.
-4. Gsm: Els ziet de taken meteen en voegt de kapper toe. Wil je een volle dag tonen? Klik in de plan-app op "Voorbeelddag laden".
-5. Spring naar 20:00: "Avondpillen" met een grote knop. Tik op de tablet. De gsm toont het vinkje met het uur.
-6. Tik "Toch niet": Anker vraagt eerst of het klopt.
-7. Spring naar 23:30: het scherm wordt donker. "Slaap zacht."
-8. Zet daarna "Echte tijd" terug.
+- Toont wat er nu op het wandscherm staat, een overzicht van de dag ("5 van 6 momenten gedaan") en een waarschuwing als een belangrijk moment een uur na tijd nog openstaat.
+- Momenten toevoegen (medicijn, maaltijd, bezoek met foto, naam en relatie, afspraak, taak), eenmalig of elke dag. Zelf afvinken of ongedaan maken.
+- Demo: spring in de tijd (08:35, 15:00, 20:00, 23:30), het wandscherm springt mee.
 
 ## Stack
 
@@ -106,7 +88,7 @@ npm test
 npm run build    # productiebuild, daarna: npm start
 ```
 
-De app start leeg. Een voorbeelddag voor Maria laad je alleen als je dat zelf kiest (plan-app, Demo, "Voorbeelddag laden"). "Alles wissen" onder Instellingen zet alles terug naar leeg (met Supabase voor iedereen in de zorgkring). Een bezoek verwijderen haalt ook de foto uit de opslag.
+De app start leeg. Een voorbeelddag laad je alleen als je dat zelf kiest (plan-app, Demo, "Voorbeelddag laden"). "Alles wissen" onder Instellingen zet alles terug naar leeg (met Supabase voor iedereen in de zorgkring). Een bezoek verwijderen haalt ook de foto uit de opslag.
 
 ## Supabase instellen
 
@@ -147,29 +129,14 @@ Importeer de repo in Vercel met deze instellingen:
 ## Projectstructuur
 
 ```
-.claude/          Claude Code-regels voor dit project
 Documentation/    frontend-, logica- en designafspraken + Anker-pitch.pptx
 Project/frontend/ de webapp
 ```
 
-## Next steps
-
-- Pushmelding naar de mantelzorger als belangrijke momenten openblijven.
-- Spraak: het scherm leest voor ("Straks komt Lisa") en Maria kan vragen "Welke dag is het?".
-- Herinneringsalbum: "Vandaag 50 jaar geleden trouwde je met Jos."
-- Zorgkring: familie en thuisverpleging delen één overzicht.
-- AI-invoer: de mantelzorger typt "morgen 10u kapper" en Anker plant het in (Claude API).
-- Testen met echte mantelzorgers.
-
 ## Presentatie
+[Documentation/Anker-pitch.pptx](Documentation/Anker-pitch.pptx)
 
-[Documentation/Anker-pitch.pptx](Documentation/Anker-pitch.pptx): 14 slides met sprekersnotities, fade-overgangen en animaties die vanzelf starten (elementen verschijnen na elkaar). Elk deel heeft de kleur van een dagdeel uit de app, en alle screenshots zitten in een tablet-, gsm- of laptopframe.
+## Auteurs
 
-| Deel | Slides |
-| --- | --- |
-| Titel | Anker, met Laurens Rombout en Sergiu Neagu |
-| Probleem | Waarom dit persoonlijk is · De Desync bij dementie, met cijfers · Maria en Els |
-| Oplossing | Concept · Leeg starten (naam, Plan je dag) · Wandscherm · Het licht vertelt de tijd · Plan-app · Website · Techniek |
-| Scopebepaling | Impact-moeitematrix, met talen (NL, EN, FR) en donkere/lichte modus |
-| Demo | Demoscript in 6 stappen |
-| Einde | Slotzin en vragen |
+- Sergiu Neagu
+- Laurens Rombout
