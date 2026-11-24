@@ -23,7 +23,7 @@ Also per dagdeel: `--soft` (secondary text) and `--panel` (the "Nu doen" block).
 
 ## Caregiver tokens
 
-Neutral and calm, independent of the dagdeel: background `#eef1f4`, no white cards (blocks sit straight on the background, rows split by lines), ink `#16202b`, action blue `#1c6aa3`, warning `#a8261c` on `#fbe4e1`.
+Neutral and calm, independent of the dagdeel: background `#eef1f4`, white cards, ink `#16202b`, action blue `#1c6aa3`, warning `#a8261c` on `#fbe4e1`.
 
 ## Type
 

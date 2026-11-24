@@ -297,7 +297,7 @@ p { text-wrap: pretty; }
   --c-ink: #16202b;
   --c-soft: #5b6775;
   --c-line: #d7dde3;
-  --c-card: transparent;
+  --c-card: #ffffff;
   --c-blue: #1c6aa3;
   --c-warn: #a8261c;
   --c-warn-bg: #fbe4e1;
