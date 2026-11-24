@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, type FormEvent } from 'react';
 import type { Item, Kind } from '../lib/day';
 
@@ -20,7 +22,7 @@ async function toThumb(file: File): Promise<string> {
   return c.toDataURL('image/jpeg', 0.8);
 }
 
-export function AddItem({ onAdd, today }: { onAdd: (item: Omit<Item, 'id'>) => void; today: string }) {
+export function AddItem({ onAdd, today, name }: { onAdd: (item: Omit<Item, 'id'>) => void; today: string; name: string }) {
   const [kind, setKind] = useState<Kind>('medicijn');
   const [time, setTime] = useState('09:00');
   const [title, setTitle] = useState('');
@@ -28,6 +30,8 @@ export function AddItem({ onAdd, today }: { onAdd: (item: Omit<Item, 'id'>) => v
   const [daily, setDaily] = useState(false);
   const [important, setImportant] = useState(true);
   const [photo, setPhoto] = useState<string>();
+  const [who, setWho] = useState('');
+  const [relation, setRelation] = useState('');
   const [error, setError] = useState('');
 
   function pickKind(k: Kind) {
@@ -52,16 +56,22 @@ export function AddItem({ onAdd, today }: { onAdd: (item: Omit<Item, 'id'>) => v
     if (!t) return setError(kind === 'bezoek' ? 'Schrijf wie er komt, bv. “Lisa komt op bezoek”.' : 'Schrijf wat er moet gebeuren.');
     if (!/^\d{2}:\d{2}$/.test(time)) return setError('Kies een uur.');
     if (!daily && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today)) return setError('Kies vandaag of een dag later.');
+    const w = who.trim();
+    const r = relation.trim();
     onAdd({
       kind,
       time,
       title: t,
       ...(daily ? {} : { date }),
       ...(photo ? { photo } : {}),
+      ...(kind === 'bezoek' && w ? { who: w } : {}),
+      ...(kind === 'bezoek' && r ? { relation: r } : {}),
       ...(important && kind !== 'bezoek' ? { important } : {}),
     });
     setTitle('');
     setPhoto(undefined);
+    setWho('');
+    setRelation('');
     setError('');
   }
 
@@ -102,6 +112,19 @@ export function AddItem({ onAdd, today }: { onAdd: (item: Omit<Item, 'id'>) => v
           />
         </label>
       </div>
+
+      {kind === 'bezoek' && (
+        <div className="add-row">
+          <label className="add-title">
+            Naam (voor “Wie is dit?”, mag leeg)
+            <input value={who} onChange={(e) => setWho(e.target.value)} placeholder="Tom" maxLength={30} autoComplete="off" />
+          </label>
+          <label className="add-title">
+            Wie is dit voor {name}? (mag leeg)
+            <input value={relation} onChange={(e) => setRelation(e.target.value)} placeholder="je zoon" maxLength={40} autoComplete="off" />
+          </label>
+        </div>
+      )}
 
       {kind === 'bezoek' && (
         <label className="add-photo">

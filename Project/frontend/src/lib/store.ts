@@ -1,11 +1,13 @@
 // App state: reducer + localStorage persistence + live sync between tabs.
 // Components only dispatch actions.
-import { useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { dateKey, type Item, type State } from './day';
+import { supabase, supabaseEnabled } from './supabase';
+import { fetchState, subscribe, write, type Write } from './remote';
 
 export type Action =
   | { type: 'toggle'; id: string; key: string; at: number }
-  | { type: 'add'; item: Omit<Item, 'id'> }
+  | { type: 'add'; item: Omit<Item, 'id'>; id?: string }
   | { type: 'remove'; id: string }
   | { type: 'setName'; name: string }
   | { type: 'setOffset'; offset: number }
@@ -32,11 +34,11 @@ export function demo(now = Date.now()): State {
     items: [
       { id: 's1', time: '08:00', title: 'Ontbijt', kind: 'maaltijd' },
       { id: 's2', time: '08:30', title: 'Ochtendpillen', kind: 'medicijn', important: true },
-      { id: 's3', time: '10:00', title: 'Tom belt even', kind: 'bezoek', date: today },
+      { id: 's3', time: '10:00', title: 'Tom belt even', kind: 'bezoek', date: today, who: 'Tom', relation: 'je zoon' },
       { id: 's4', time: '10:30', title: 'Planten water geven', kind: 'taak' },
       { id: 's5', time: '12:30', title: 'Middageten', kind: 'maaltijd' },
       { id: 's10', time: '13:30', title: 'Kapper', kind: 'afspraak', date: today },
-      { id: 's6', time: '15:00', title: 'Lisa komt (thuisverpleging)', kind: 'bezoek', date: today },
+      { id: 's6', time: '15:00', title: 'Lisa komt langs', kind: 'bezoek', date: today, who: 'Lisa', relation: 'thuisverpleging' },
       { id: 's7', time: '18:00', title: 'Avondeten', kind: 'maaltijd' },
       { id: 's8', time: '20:00', title: 'Avondpillen', kind: 'medicijn', important: true },
       { id: 's9', time: '21:00', title: 'Voordeur op slot doen', kind: 'taak', important: true },
@@ -57,7 +59,7 @@ export function reducer(state: State, action: Action): State {
       return { ...state, done: { ...done, [action.key]: day } };
     }
     case 'add':
-      return { ...state, items: [...state.items, { ...action.item, id: crypto.randomUUID() }] };
+      return { ...state, items: [...state.items, { ...action.item, id: action.id ?? crypto.randomUUID() }] };
     case 'remove':
       return { ...state, items: state.items.filter((i) => i.id !== action.id) };
     case 'setName':
@@ -98,68 +100,211 @@ function load(): State {
   }
 }
 
+/** Safety net next to Realtime: reload now and then, also to renew the signed photo URLs. */
+const POLL_MS = 30_000;
+/** Many events in a row (a demo day is a dozen inserts) become one reload. */
+const RELOAD_DELAY_MS = 250;
+
+/** The demo day with real UUIDs, because the database needs them. */
+function remoteDemo(prev: State): State {
+  const d = demo();
+  return {
+    ...d,
+    items: d.items.map((i) => ({ ...i, id: crypto.randomUUID() })),
+    name: prev.name.trim() || d.name,
+    offset: prev.offset,
+    circle: prev.circle,
+  };
+}
+
+/** What an action means for the database. Null when it only changes this device (invite, replace). */
+function toWrite(a: Action, prev: State): Write | null {
+  switch (a.type) {
+    case 'toggle':
+      return { type: 'toggle', id: a.id, key: a.key, at: a.at, wasDone: prev.done[a.key]?.[a.id] !== undefined };
+    case 'add':
+      return a.id ? { type: 'add', item: { ...a.item, id: a.id } } : null;
+    case 'remove':
+      return { type: 'remove', id: a.id, hadPhoto: !!prev.items.find((i) => i.id === a.id)?.photo };
+    case 'setName':
+      return { type: 'setName', name: a.name };
+    case 'setOffset':
+      return { type: 'setOffset', offset: a.offset };
+    case 'reset':
+      return { type: 'reset' };
+    default:
+      return null;
+  }
+}
+
 /**
- * State that survives a refresh and syncs live between tabs on the same device
- * (wall screen + caregiver view in the demo).
- * shortcut: localStorage only syncs within one browser, swap for a realtime backend (Supabase) for real devices.
+ * The day state, with two storage modes.
+ * Local (no Supabase env vars): survives a refresh in localStorage and syncs between tabs of one browser.
+ * Remote (`circleId` given): loaded from Supabase, kept fresh by Realtime, and every action is written to the database.
+ * Either way the UI is optimistic: the reducer runs first, the write follows, and a failed write sets `saveError`.
+ * The first render is always the empty seed (same on server and client); `ready` turns true once real data is in.
  */
-export function useDayStore() {
-  const [state, dispatch] = useReducer(reducer, undefined, load);
+export function useDayStore(circleId: string | null = null) {
+  const [state, rawDispatch] = useReducer(reducer, undefined, seed);
+  const [localReady, setLocalReady] = useState(false);
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const [saveError, setSaveError] = useState(false);
 
+  const stateRef = useRef(state); // always the latest state, also between two renders
+  const circleRef = useRef(circleId);
+  const pending = useRef(0); // writes in flight: do not load over an optimistic change
+  const dirty = useRef(false); // a load was skipped because of that
+  const queue = useRef<Promise<unknown>>(Promise.resolve()); // writes go out in order
+  const writes = useRef(0); // counts every write ever started: a load that saw a write start is stale
+  const loads = useRef(0); // counts loads: only the newest one may replace the state
+
   useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // ----- local mode -----
+  useEffect(() => {
+    if (supabaseEnabled) return;
+    const saved = load();
+    stateRef.current = saved;
+    rawDispatch({ type: 'replace', state: saved });
+    setLocalReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (supabaseEnabled || !localReady) return;
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
       setSaveError(false);
     } catch {
       setSaveError(true);
     }
-  }, [state]);
+  }, [state, localReady]);
 
   useEffect(() => {
+    if (supabaseEnabled) return;
     const onStorage = (e: StorageEvent) => {
       if (e.key !== KEY) return;
       const next = parse(e.newValue);
-      if (next) dispatch({ type: 'replace', state: next });
+      if (next) rawDispatch({ type: 'replace', state: next });
     };
     addEventListener('storage', onStorage);
     return () => removeEventListener('storage', onStorage);
   }, []);
 
-  return { state, dispatch, saveError };
+  // ----- remote mode -----
+  const reload = useCallback(async (id: string) => {
+    if (!supabase) return;
+    if (pending.current > 0) {
+      dirty.current = true;
+      return;
+    }
+    const load = ++loads.current;
+    const seenWrites = writes.current;
+    try {
+      const fresh = await fetchState(supabase, id);
+      // Skip when the circle changed, or a newer load started, while we were loading.
+      if (circleRef.current !== id || load !== loads.current) return;
+      // A write started while we were loading: this data may miss it. Load again once the writes are done.
+      if (writes.current !== seenWrites) {
+        if (pending.current > 0) dirty.current = true;
+        else void reload(id);
+        return;
+      }
+      const next: State = { ...fresh, circle: stateRef.current.circle }; // the invite list is local only
+      stateRef.current = next;
+      rawDispatch({ type: 'replace', state: next });
+      setLoadedFor(id);
+    } catch {
+      // Keep showing what we have. The next poll or event tries again.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
+    circleRef.current = circleId;
+    if (!circleId) {
+      const empty = seed();
+      stateRef.current = empty;
+      rawDispatch({ type: 'replace', state: empty });
+      setLoadedFor(null);
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const soon = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void reload(circleId), RELOAD_DELAY_MS);
+    };
+    void reload(circleId);
+    const unsubscribe = subscribe(supabase, circleId, soon, (itemId) => stateRef.current.items.some((i) => i.id === itemId));
+    const poll = setInterval(() => void reload(circleId), POLL_MS);
+    const onVisible = () => document.visibilityState === 'visible' && void reload(circleId);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(poll);
+      unsubscribe();
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [circleId, reload]);
+
+  const dispatch = useCallback(
+    (action: Action) => {
+      const prev = stateRef.current;
+      const id = circleRef.current;
+      let a = action;
+      let w: Write | null = null;
+      if (supabaseEnabled && id) {
+        if (a.type === 'add') a = { ...a, id: crypto.randomUUID() };
+        if (a.type === 'loadDemo') {
+          const d = remoteDemo(prev);
+          a = { type: 'replace', state: d };
+          w = { type: 'demo', items: d.items, name: d.name };
+        } else {
+          w = toWrite(a, prev);
+          // Reset empties the plan but keeps the circle: its name and koppelcode stay.
+          if (a.type === 'reset') a = { type: 'replace', state: { ...seed(), name: prev.name, circle: prev.circle, offset: prev.offset } };
+        }
+      }
+      stateRef.current = reducer(prev, a);
+      rawDispatch(a);
+
+      if (!w || !supabase) return;
+      const sb = supabase;
+      const job = w;
+      pending.current++;
+      writes.current++;
+      queue.current = queue.current
+        .then(() => write(sb, id!, job))
+        .then(
+          () => setSaveError(false),
+          () => {
+            setSaveError(true);
+            dirty.current = true; // load again so the screen shows what the database really has
+          },
+        )
+        .finally(() => {
+          pending.current--;
+          if (pending.current === 0 && dirty.current) {
+            dirty.current = false;
+            void reload(id!);
+          }
+        });
+    },
+    [reload],
+  );
+
+  const ready = supabaseEnabled ? circleId === null || loadedFor === circleId : localReady;
+  return { state, dispatch, saveError, ready };
 }
 
-/** Current time plus the demo shift, refreshed every `ms`. */
-export function useNow(offset = 0, ms = 10_000) {
-  const [real, setReal] = useState(() => Date.now());
+/** Current time plus the demo shift, refreshed every `ms`. Null until mounted (the server has no useful clock). */
+export function useNow(offset = 0, ms = 10_000): number | null {
+  const [real, setReal] = useState<number | null>(null);
   useEffect(() => {
     setReal(Date.now()); // pick up a new offset at once
     const id = setInterval(() => setReal(Date.now()), ms);
     return () => clearInterval(id);
   }, [ms, offset]);
-  return real + offset;
-}
-
-export type Route = 'home' | 'scherm' | 'zorg' | 'privacy' | 'voorwaarden';
-const PAGES: Route[] = ['scherm', 'zorg', 'privacy', 'voorwaarden'];
-
-/**
- * Hash routes: "#/scherm" = wall screen, "#/zorg" = caregiver, anything else = home.
- * "#/waarom" and friends open home and scroll to the section with that id.
- */
-export function useRoute(): Route {
-  const [hash, setHash] = useState(() => location.hash);
-  useEffect(() => {
-    const on = () => setHash(location.hash);
-    addEventListener('hashchange', on);
-    return () => removeEventListener('hashchange', on);
-  }, []);
-  const route: Route = PAGES.find((p) => hash.startsWith('#/' + p)) ?? 'home';
-  useEffect(() => {
-    const id = hash.replace(/^#\/?/, '');
-    const el = route === 'home' && id ? document.getElementById(id) : null;
-    if (el) el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    else scrollTo(0, 0);
-  }, [hash, route]);
-  return route;
+  return real === null ? null : real + offset;
 }

@@ -1,6 +1,10 @@
+'use client';
+
+import Link from 'next/link';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { today, dagdeel, momentWord, formatClock, formatDate, type State, type Slot, type Item } from '../lib/day';
-import { useWeather, type Sky } from '../lib/weather';
+import { useWeather, weatherTip, type Sky } from '../lib/weather';
+import { FONT_SCALES, useFontScale } from '../lib/fontscale';
 import { KindIcon } from './KindIcon';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Modal } from './Modal';
@@ -29,6 +33,8 @@ type Props = {
 export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
   const t = today(state, now);
   const weather = useWeather();
+  const tip = weatherTip(weather, dagdeel(now));
+  const [fontScale, setFontScale] = useFontScale();
   const name = state.name.trim();
   // Only the most recent open moment: "Ontbijt" at 23:30 would only confuse. The caregiver sees what was missed.
   const focus = t.open.at(-1);
@@ -39,9 +45,10 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
   const [undo, setUndo] = useState<Slot | null>(null);
   const [editName, setEditName] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [visitor, setVisitor] = useState<Slot | null>(null);
 
   return (
-    <main className="wall">
+    <main className="wall" data-fontscale={fontScale}>
       <header className="wall-head">
         <div>
           <p className="wall-greet">
@@ -58,6 +65,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
               </span>
             )}
           </p>
+          {tip && <p className="wall-tip">{tip}</p>}
         </div>
         <time className="wall-clock" dateTime={new Date(now).toISOString()}>
           {formatClock(now)}
@@ -113,7 +121,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
             </div>
           ) : next ? (
             <>
-              <KindIcon item={next} size={88} />
+              <Visitor item={next} size={88} onOpen={setVisitor} />
               <div className="focus-text">
                 <p className="focus-label">Straks, om {next.time}</p>
                 <p className="focus-title">{next.title}</p>
@@ -160,7 +168,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
               {t.done.map((s) => (
                 <li key={s.id} className="past">
                   <span className="t">{s.time}</span>
-                  <KindIcon item={s} size={36} />
+                  <Visitor item={s} size={36} onOpen={setVisitor} />
                   <span className="what">
                     {s.title}
                     {canUndo(s) && <span className="when">Gedaan om {formatClock(ticked[s.id])}</span>}
@@ -184,7 +192,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
               {t.later.map((s) => (
                 <li key={s.id}>
                   <span className="t">{s.time}</span>
-                  <KindIcon item={s} size={36} />
+                  <Visitor item={s} size={36} onOpen={setVisitor} />
                   <span className="what">{s.title}</span>
                 </li>
               ))}
@@ -202,12 +210,20 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
             Naam aanpassen
           </button>
         )}
-        <a className="wall-link" href="#/zorg">
+        <div className="wall-size" role="group" aria-label="Lettergrootte">
+          <span>Tekst:</span>
+          {FONT_SCALES.map((f) => (
+            <button key={f.value} className="wall-link" aria-pressed={fontScale === f.value} onClick={() => setFontScale(f.value)}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <Link className="wall-link" href="/plan">
           Voor de mantelzorger
-        </a>
-        <a className="wall-link" href="#/">
+        </Link>
+        <Link className="wall-link" href="/">
           Over Anker
-        </a>
+        </Link>
       </nav>
 
       <ConfirmDialog
@@ -229,6 +245,31 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
           setUndo(null);
         }}
       />
+
+      <Modal open={!!visitor} labelledBy="who-title" onClose={() => setVisitor(null)}>
+        {visitor && (
+          <div className="who">
+            <p className="who-label">Wie is dit?</p>
+            {visitor.photo ? (
+              <img className="avatar who-photo" src={visitor.photo} alt="" />
+            ) : (
+              <span className="avatar initial who-photo" aria-hidden="true">
+                {(visitor.who || visitor.title).trim().charAt(0).toUpperCase()}
+              </span>
+            )}
+            <p id="who-title" className="who-name">
+              {visitor.who || visitor.title}
+            </p>
+            {visitor.relation && <p className="who-relation">{visitor.relation}</p>}
+            <p className="who-time">Komt om {visitor.time}</p>
+            <div className="confirm-actions">
+              <button className="confirm-keep" onClick={() => setVisitor(null)} autoFocus>
+                Sluiten
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal open={editName} labelledBy="name-title" onClose={() => setEditName(false)}>
         <p id="name-title" className="confirm-title">
@@ -263,6 +304,16 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
         />
       </Modal>
     </main>
+  );
+}
+
+/** A visitor can be tapped for "Wie is dit?". Everything else is just its icon. */
+function Visitor({ item, size, onOpen }: { item: Slot; size: number; onOpen: (s: Slot) => void }) {
+  if (item.kind !== 'bezoek') return <KindIcon item={item} size={size} />;
+  return (
+    <button className="who-btn" onClick={() => onOpen(item)} aria-label={`Wie is dit? ${item.who || item.title}`}>
+      <KindIcon item={item} size={size} />
+    </button>
   );
 }
 

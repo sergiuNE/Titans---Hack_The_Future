@@ -14,6 +14,10 @@ export type Item = {
   photo?: string;
   /** The caregiver gets a warning when it is still open LATE_MIN minutes after its time. */
   important?: boolean;
+  /** Visitors: the name shown in "Wie is dit?", e.g. "Tom". */
+  who?: string;
+  /** Visitors: how they relate to the person, e.g. "je zoon", "thuisverpleging". */
+  relation?: string;
 };
 
 export type State = {
@@ -104,4 +108,16 @@ export function today(state: State, now: number) {
     meds,
     medsTaken: meds.filter((s) => s.state === 'done').length,
   };
+}
+
+/** The day in numbers for the caregiver: how many moments are done and what is still to go (open first, then later). */
+export function overview(slots: Slot[]) {
+  const left = slots.filter((s) => s.state !== 'done');
+  return { total: slots.length, done: slots.length - left.length, left, leftImportant: left.filter((s) => s.important) };
+}
+
+/** From 18:00 the caregiver gets the evening overview in full. */
+export function isEvening(now: number): boolean {
+  const part = dagdeel(now);
+  return part === 'avond' || part === 'nacht';
 }

@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect } from 'react';
+import Link from 'next/link';
 import { today, momentWord, formatClock, type State } from '../lib/day';
 import { KindIcon } from './KindIcon';
 
@@ -5,6 +9,12 @@ import { KindIcon } from './KindIcon';
 export function Home({ state, now }: { state: State; now: number }) {
   const t = today(state, now);
   const preview = t.open.at(-1) ?? t.later[0];
+
+  // The page mounts after the day has loaded, so the browser cannot find "/#waarom" itself: scroll to it here.
+  useEffect(() => {
+    const el = location.hash ? document.getElementById(location.hash.slice(1)) : null;
+    el?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }, []);
 
   return (
     <main className="home">
@@ -16,16 +26,16 @@ export function Home({ state, now }: { state: State; now: number }) {
             gebeurd is en wat nog komt. De familie plant de dag vanaf de gsm en ziet meteen wat er gedaan is.
           </p>
           <div className="hero-cta">
-            <a className="btn-primary" href="#/scherm">
+            <Link className="btn-primary" href="/vandaag">
               Open het wandscherm
-            </a>
-            <a className="btn-secondary" href="#/zorg">
+            </Link>
+            <Link className="btn-secondary" href="/plan">
               Ik ben mantelzorger
-            </a>
+            </Link>
           </div>
         </div>
 
-        <a className="hero-preview" href="#/scherm" aria-label="Live voorbeeld van het wandscherm, openen">
+        <Link className="hero-preview" href="/vandaag" aria-label="Live voorbeeld van het wandscherm, openen">
           <span className="pv-moment">Het is {momentWord(now)}.</span>
           <span className="pv-clock">{formatClock(now)}</span>
           {preview && (
@@ -42,7 +52,7 @@ export function Home({ state, now }: { state: State; now: number }) {
               ? 'Nog niets gepland. Open het wandscherm om je dag te plannen.'
               : `Pillen vandaag: ${t.medsTaken} van ${t.meds.length} genomen`}
           </span>
-        </a>
+        </Link>
       </section>
 
       <section id="waarom" className="band band-warm">
@@ -150,18 +160,18 @@ export function Home({ state, now }: { state: State; now: number }) {
               <p className="persona-sub">Beginnende Alzheimer, woont alleen in Mortsel. Tablet aan de muur.</p>
               <p>Vraagt elke ochtend welke dag het is. Vergeet of ze gegeten heeft. Wordt onrustig als er onverwacht iemand aanbelt.</p>
               <p className="persona-quote">Tijd is een mist zonder houvast.</p>
-              <a className="btn-secondary" href="#/scherm">
+              <Link className="btn-secondary" href="/vandaag">
                 Bekijk het scherm van Maria
-              </a>
+              </Link>
             </article>
             <article className="persona">
               <h3>Els, 52</h3>
               <p className="persona-sub">Dochter van Maria, werkt voltijds in Antwerpen. Eigen gsm.</p>
               <p>Plant de thuisverpleging, de kapper en de bezoekjes van haar broer Tom. Belt mama vijf keer per dag.</p>
               <p className="persona-quote">Tijd is te kort en vol zorgen.</p>
-              <a className="btn-secondary" href="#/zorg">
+              <Link className="btn-secondary" href="/plan">
                 Bekijk de plan-app van Els
-              </a>
+              </Link>
             </article>
           </div>
         </div>
@@ -172,12 +182,12 @@ export function Home({ state, now }: { state: State; now: number }) {
           <h2>Probeer het zelf</h2>
           <p>Open het wandscherm en de plan-app naast elkaar. Wat je op de ene afvinkt, verschijnt meteen op de andere.</p>
           <div className="hero-cta">
-            <a className="btn-primary" href="#/scherm">
+            <Link className="btn-primary" href="/vandaag">
               Open het wandscherm
-            </a>
-            <a className="btn-secondary" href="#/zorg">
+            </Link>
+            <Link className="btn-secondary" href="/plan">
               Open de plan-app
-            </a>
+            </Link>
           </div>
         </div>
       </section>

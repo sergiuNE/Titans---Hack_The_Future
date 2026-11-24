@@ -1,12 +1,26 @@
 // Current weather from Open-Meteo (free, no key, no personal data sent).
 import { useEffect, useState } from 'react';
+import type { Dagdeel } from './day';
 
 // shortcut: fixed location (Mortsel, where the persona lives); move to a per-circle setting with a real backend.
 const URL =
-  'https://api.open-meteo.com/v1/forecast?latitude=51.17&longitude=4.46&current=temperature_2m,weather_code&timezone=Europe%2FBrussels';
+  'https://api.open-meteo.com/v1/forecast?latitude=51.17&longitude=4.46&current=temperature_2m,weather_code,precipitation&timezone=Europe%2FBrussels';
 
 export type Sky = 'zon' | 'wolk' | 'mist' | 'regen' | 'sneeuw' | 'onweer';
-export type Weather = { temp: number; sky: Sky; label: string };
+/** `precip` is the rain falling right now, in mm. */
+export type Weather = { temp: number; sky: Sky; label: string; precip: number };
+
+const COLD_BELOW = 8;
+const HOT_ABOVE = 25;
+
+/** One short, warm tip from the weather. Null when there is nothing to say, and always at night and in the evening. */
+export function weatherTip(w: Weather | null, part: Dagdeel): string | null {
+  if (!w || (part !== 'ochtend' && part !== 'middag')) return null;
+  if (w.sky === 'regen' || w.sky === 'onweer' || w.precip > 0) return 'Het regent. Neem een paraplu mee.';
+  if (w.temp < COLD_BELOW) return 'Het is koud buiten. Neem je warme jas.';
+  if (w.temp > HOT_ABOVE) return 'Het is warm. Drink genoeg water.';
+  return null;
+}
 
 /** WMO weather code to a plain Dutch word. */
 export function describe(code: number): { sky: Sky; label: string } {
@@ -29,7 +43,8 @@ export function useWeather(): Weather | null {
         .then((d) => {
           const t = d?.current?.temperature_2m;
           const c = d?.current?.weather_code;
-          if (alive && typeof t === 'number' && typeof c === 'number') setW({ temp: Math.round(t), ...describe(c) });
+          const p = d?.current?.precipitation;
+          if (alive && typeof t === 'number' && typeof c === 'number') setW({ temp: Math.round(t), precip: typeof p === 'number' ? p : 0, ...describe(c) });
         })
         .catch(() => {}); // weather is a nice-to-have; never break the wall screen over it
     load();

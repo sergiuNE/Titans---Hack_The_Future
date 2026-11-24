@@ -1,5 +1,5 @@
 // Privacy policy and terms of use for the hackathon prototype.
-// Written for what the app really does today: everything stays in the browser.
+// Written for what the app really does: demo mode keeps data on the device, Supabase mode stores it in Supabase.
 
 const UPDATED = '24 november 2026';
 
@@ -9,8 +9,8 @@ export function Privacy() {
       <p className="legal-meta">Laatst bijgewerkt op {UPDATED}</p>
       <h1>Privacybeleid</h1>
       <p className="legal-lead">
-        Anker gaat over gezondheid en dagelijkse zorg. Daarom houden we het simpel: wat je in Anker invult, blijft op je
-        eigen toestel. Wij ontvangen het niet.
+        Anker gaat over gezondheid en dagelijkse zorg. Daarom houden we het simpel en zeggen we eerlijk waar je gegevens
+        staan. Dat hangt af van hoe Anker draait: als demo op je eigen toestel, of gekoppeld met Supabase.
       </p>
 
       <h2>Wie zijn wij</h2>
@@ -24,25 +24,32 @@ export function Privacy() {
         <li>De naam die je ingeeft, voor de begroeting op het wandscherm.</li>
         <li>De planning: taken, medicijnen, maaltijden, afspraken en bezoeken, met datum en uur.</li>
         <li>Wanneer iets is afgevinkt.</li>
-        <li>Foto's die je bij een bezoek toevoegt (verkleind tot een klein beeld).</li>
+        <li>Foto's die je bij een bezoek toevoegt (verkleind tot een klein beeld), met de naam en wie het is voor je naaste.</li>
         <li>De namen in de zorgkring.</li>
       </ul>
       <p>
         Een planning met medicijnen kan iets zeggen over iemands gezondheid. Volgens de AVG (GDPR) zijn dat bijzondere
-        persoonsgegevens. Juist daarom stuurt dit prototype ze nergens naartoe.
+        persoonsgegevens. Voeg dus alleen toe wat nodig is.
       </p>
 
       <h2>Waar je gegevens staan</h2>
       <p>
-        Alles staat in de lokale opslag van je browser (localStorage) op het toestel dat je gebruikt. Er is geen account,
-        geen server van ons, geen statistieken en geen reclame. Afvinkingen ouder dan 7 dagen worden automatisch gewist.
+        <strong>Demo (zonder Supabase).</strong> Alles staat in de lokale opslag van je browser (localStorage) op het
+        toestel dat je gebruikt. Er is geen account en geen server van ons. Wij ontvangen niets.
       </p>
+      <p>
+        <strong>Met Supabase.</strong> Dan staan de planning, de vinkjes en de foto's in Supabase, zodat tablet en gsm
+        dezelfde dag zien. We raden een project in een EU-regio aan. Row level security zorgt dat alleen de mensen van
+        dezelfde zorgkring de gegevens zien. Foto's staan in een privé-opslag en worden alleen getoond via tijdelijke links.
+        De mantelzorger meldt zich aan met e-mailadres en wachtwoord, de tablet koppelt met een code.
+      </p>
+      <p>Er zijn geen statistieken en geen reclame. Afvinkingen ouder dan 7 dagen worden niet meer getoond.</p>
 
       <h2 id="cookies">Cookies</h2>
       <p>Anker plaatst geen cookies. De lokale opslag van je browser is enkel nodig om je planning te bewaren.</p>
 
       <h2>Diensten van derden</h2>
-      <p>Om de website te tonen, maakt je browser verbinding met deze diensten. Ze krijgen daarbij je IP-adres te zien, maar geen planning of naam:</p>
+      <p>Om de website te tonen, maakt je browser verbinding met deze diensten. Ze krijgen daarbij je IP-adres te zien, maar (behalve Supabase) geen planning of naam:</p>
       <ul>
         <li>
           <strong>Open-Meteo</strong>, voor het weer op het wandscherm. De vraag bevat alleen een vaste locatie (Mortsel), niet
@@ -52,21 +59,19 @@ export function Privacy() {
           <strong>Google Fonts</strong>, voor het lettertype Lexend.
         </li>
         <li>
+          <strong>Supabase</strong>, alleen als Anker daarmee gekoppeld is: daar staan dan de gegevens uit dit beleid.
+        </li>
+        <li>
           <strong>De hostingpartij</strong> van de website, die zoals elke webserver technische logs bijhoudt.
         </li>
       </ul>
 
       <h2>Je rechten</h2>
       <p>
-        Je hebt zelf alle controle. Je kunt je gegevens op elk moment wissen via Mantelzorger, Instellingen, “Alles wissen”,
-        of door de websitegegevens in je browser te verwijderen. Omdat wij niets ontvangen, kunnen wij je gegevens ook niet
-        inkijken, doorgeven of herstellen.
-      </p>
-
-      <h2>Als Anker later groeit</h2>
-      <p>
-        Synchronisatie tussen tablet en gsm vraagt een server. Voor we die toevoegen, passen we dit beleid aan en vragen we
-        eerst je toestemming. Gegevens worden dan in de EU bewaard en enkel de eigen zorgkring kan ze zien.
+        Je kunt je gegevens op elk moment wissen via Mantelzorger, Instellingen, “Alles wissen”. Zonder Supabase verdwijnt
+        alles van het toestel (of verwijder de websitegegevens in je browser). Met Supabase worden de planning en de
+        vinkjes voor iedereen in de zorgkring gewist, en probeert Anker de foto's uit de opslag te verwijderen als je een bezoek verwijdert of alles wist.
+        Heb je een vraag over je gegevens, stel ze aan wie Anker voor je opzet.
       </p>
     </main>
   );
@@ -94,7 +99,7 @@ export function Terms() {
 
       <h2>Je eigen gegevens</h2>
       <p>
-        Wat je invult, blijft van jou en staat enkel op je eigen toestel (zie het privacybeleid). Voeg alleen foto's of
+        Wat je invult, blijft van jou. Waar het staat, lees je in het privacybeleid. Voeg alleen foto's of
         namen van anderen toe als zij daarmee akkoord gaan.
       </p>
 

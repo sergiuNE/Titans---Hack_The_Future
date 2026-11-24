@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { today, dagdeel, momentWord, dateKey, type State } from './day';
+import { today, dagdeel, momentWord, dateKey, overview, isEvening, type State } from './day';
 import { reducer } from './store';
 import { describe as describeWeather } from './weather';
 
@@ -85,5 +85,24 @@ describe('reducer', () => {
 
   it('shifts the demo clock', () => {
     expect(reducer(state, { type: 'setOffset', offset: 3600_000 }).offset).toBe(3600_000);
+  });
+});
+
+describe('overview', () => {
+  it('counts done moments and lists what is left, important ones apart', () => {
+    const o = overview(today(state, now).slots);
+    expect([o.done, o.total]).toEqual([2, 6]);
+    expect(o.left.map((s) => s.id)).toEqual(['plant', 'pil2', 'pil3', 'eten']);
+    expect(o.leftImportant.map((s) => s.id)).toEqual(['pil2', 'pil3']);
+  });
+
+  it('is empty-safe', () => {
+    expect(overview([])).toEqual({ total: 0, done: 0, left: [], leftImportant: [] });
+  });
+
+  it('is evening from 18:00', () => {
+    expect(isEvening(new Date(2026, 10, 24, 17, 59).getTime())).toBe(false);
+    expect(isEvening(new Date(2026, 10, 24, 18, 0).getTime())).toBe(true);
+    expect(isEvening(new Date(2026, 10, 24, 23, 30).getTime())).toBe(true);
   });
 });

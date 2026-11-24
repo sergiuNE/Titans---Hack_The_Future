@@ -1,4 +1,7 @@
-import { today, momentWord, formatClock, timeOnDay, type State, type Item } from '../lib/day';
+'use client';
+
+import Link from 'next/link';
+import { today, overview, isEvening, momentWord, formatClock, timeOnDay, type State, type Item } from '../lib/day';
 import { KindIcon } from './KindIcon';
 import { useState, type FormEvent } from 'react';
 import { AddItem } from './AddItem';
@@ -22,13 +25,19 @@ type Props = {
   onInvite: (member: string) => void;
   onDemo: () => void;
   onReset: () => void;
+  /** Only with an account (Supabase on): the code that links the tablet, and sign out. */
+  pairCode?: string;
+  onSignOut?: () => void;
 };
 
 /** Caregiver on the phone: plan the day, see what happened, act on what is late. */
-export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove, onName, onOffset, onInvite, onDemo, onReset }: Props) {
+export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove, onName, onOffset, onInvite, onDemo, onReset, pairCode, onSignOut }: Props) {
   const t = today(state, now);
   const late = t.open.filter((s) => s.late);
   const ticked = state.done[t.key] ?? {};
+  const sum = overview(t.slots);
+  const evening = isEvening(now);
+  const remote = !!pairCode; // a pair code only exists with Supabase
   const name = state.name.trim() || 'je naaste';
   const upcoming = state.items
     .filter((i) => i.date && i.date > t.key)
@@ -49,10 +58,10 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
     <>
     <main className="care">
       <header className="care-head">
-        <a className="care-back" href="#/scherm">
+        <Link className="care-back" href="/vandaag">
           Wandscherm tonen
-        </a>
-        <h1>Vandaag bij {name}</h1>
+        </Link>
+        <h1>Plan van {name}</h1>
         <p className="care-sub">
           Op het wandscherm staat nu: “Het is {momentWord(now)}”, {formatClock(now)}
         </p>
@@ -60,7 +69,7 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
 
       {saveError && (
         <p className="care-alert" role="alert">
-          Deze browser bewaart niets. Wijzigingen verdwijnen bij herladen.
+          Opslaan is niet gelukt. Wijzigingen kunnen verdwijnen bij herladen.
         </p>
       )}
 
@@ -73,6 +82,38 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
           ))}
           <p className="care-hint">Al meer dan een uur open. Bel even, of vink af als het toch gebeurd is.</p>
         </div>
+      )}
+
+      {sum.total > 0 && (
+        <section className={`care-summary ${evening ? 'evening' : ''}`} aria-labelledby="sum-title">
+          <h2 id="sum-title">Vandaag bij {name}</h2>
+          <p className="sum-count">
+            <strong>
+              {sum.done} van {sum.total}
+            </strong>{' '}
+            momenten gedaan
+          </p>
+          {sum.left.length === 0 ? (
+            <p className="sum-ok">Alles is gedaan voor vandaag.</p>
+          ) : evening ? (
+            <>
+              <p className="sum-head">Nog open</p>
+              <ul className="sum-list">
+                {sum.left.map((s) => (
+                  <li key={s.id}>
+                    <span className="t">{s.time}</span>
+                    <span>{s.title}</span>
+                    {s.important && <span className="sum-flag">Belangrijk</span>}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="sum-small">
+              Nog open: {sum.left.map((s) => `${s.title} (${s.time})${s.important ? ', belangrijk' : ''}`).join(' · ')}
+            </p>
+          )}
+        </section>
       )}
 
       <dl className="care-stats">
@@ -167,7 +208,7 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
       <div className="care-side">
       <section aria-labelledby="add-title">
         <h2 id="add-title">Moment toevoegen</h2>
-        <AddItem onAdd={onAdd} today={t.key} />
+        <AddItem onAdd={onAdd} today={t.key} name={name} />
       </section>
 
       <section aria-labelledby="circle-title" className="care-settings">
@@ -199,6 +240,15 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
 
       <section aria-labelledby="set-title" className="care-settings">
         <h2 id="set-title">Instellingen</h2>
+        {pairCode && (
+          <div className="pair-box">
+            <p className="care-hint-small">Koppelcode</p>
+            <p className="pair-code" aria-label={`Koppelcode ${pairCode.split('').join(' ')}`}>
+              {pairCode}
+            </p>
+            <p className="care-hint-small">Typ deze code op de tablet van {name === 'je naaste' ? 'je naaste' : name}.</p>
+          </div>
+        )}
         <label htmlFor="name">Naam van je naaste</label>
         <input
           id="name"
@@ -214,10 +264,21 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
         </p>
         <button
           className="link-btn"
-          onClick={() => confirm('Alles wissen? De naam, de planning, de vinkjes en de zorgkring verdwijnen van dit toestel.') && onReset()}
+          onClick={() =>
+            confirm(
+              remote
+                ? `Alles wissen? De planning en de vinkjes van ${name} worden voor iedereen gewist.`
+                : 'Alles wissen? De naam, de planning, de vinkjes en de zorgkring verdwijnen van dit toestel.',
+            ) && onReset()
+          }
         >
           Alles wissen
         </button>
+        {onSignOut && (
+          <button className="link-btn" onClick={onSignOut}>
+            Afmelden
+          </button>
+        )}
       </section>
 
       <section aria-labelledby="demo-title" className="care-demo">
