@@ -1,7 +1,7 @@
 import { today, momentWord, formatClock, timeOnDay, type State, type Item } from '../lib/day';
 import { KindIcon } from './KindIcon';
+import { useState, type FormEvent } from 'react';
 import { AddItem } from './AddItem';
-import { SiteFooter } from './SiteFooter';
 
 // Demo only: jump through the day so the jury sees "Straks" become "Nu" become "Al gebeurd".
 const JUMPS = ['08:35', '15:00', '20:00', '23:30'];
@@ -15,25 +15,38 @@ type Props = {
   onRemove: (id: string) => void;
   onName: (name: string) => void;
   onOffset: (offset: number) => void;
+  onInvite: (member: string) => void;
   onReset: () => void;
 };
 
 /** Caregiver on the phone: plan the day, see what happened, act on what is late. */
-export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove, onName, onOffset, onReset }: Props) {
+export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove, onName, onOffset, onInvite, onReset }: Props) {
   const t = today(state, now);
   const late = t.open.filter((s) => s.late);
   const ticked = state.done[t.key] ?? {};
+  const name = state.name.trim() || 'je naaste';
+  const [invite, setInvite] = useState('');
+  const [invited, setInvited] = useState('');
+
+  function sendInvite(e: FormEvent) {
+    e.preventDefault();
+    const m = invite.trim();
+    if (!m) return;
+    onInvite(m);
+    setInvited(m);
+    setInvite('');
+  }
 
   return (
     <>
     <main className="care">
       <header className="care-head">
-        <a className="care-back" href="#/">
+        <a className="care-back" href="#/scherm">
           Wandscherm tonen
         </a>
-        <h1>Vandaag bij {state.name}</h1>
+        <h1>Vandaag bij {name}</h1>
         <p className="care-sub">
-          {state.name} ziet nu: “Het is {momentWord(now)}”, {formatClock(now)}
+          Op het wandscherm staat nu: “Het is {momentWord(now)}”, {formatClock(now)}
         </p>
       </header>
 
@@ -69,10 +82,11 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
         </div>
       </dl>
 
+      <div className="care-cols">
       <section aria-labelledby="day-title">
         <h2 id="day-title">Dagplanning</h2>
         {t.slots.length === 0 ? (
-          <p className="care-empty">Nog niets gepland. Voeg hieronder het eerste moment toe.</p>
+          <p className="care-empty">Nog niets gepland. Voeg het eerste moment toe bij “Moment toevoegen”.</p>
         ) : (
           <ul className="care-list">
             {t.slots.map((s) => {
@@ -117,15 +131,54 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
         )}
       </section>
 
+      <div className="care-side">
       <section aria-labelledby="add-title">
         <h2 id="add-title">Moment toevoegen</h2>
         <AddItem onAdd={onAdd} today={t.key} />
       </section>
 
+      <section aria-labelledby="circle-title" className="care-settings">
+        <h2 id="circle-title">Zorgkring</h2>
+        <p className="care-hint-small">Iedereen in de kring ziet hetzelfde overzicht.</p>
+        <ul className="circle">
+          {(state.circle ?? []).map((m) => (
+            <li key={m}>
+              <span className="avatar initial" aria-hidden="true">
+                {m.charAt(0).toUpperCase()}
+              </span>
+              {m}
+            </li>
+          ))}
+        </ul>
+        <form className="invite" onSubmit={sendInvite}>
+          <label htmlFor="invite" className="sr-only">
+            Naam van wie je wilt uitnodigen
+          </label>
+          <input id="invite" value={invite} onChange={(e) => setInvite(e.target.value)} placeholder="bv. Tom" maxLength={30} />
+          <button className="chip-btn">Uitnodigen</button>
+        </form>
+        {invited && (
+          <p className="care-hint-small" role="status">
+            {invited} staat in de zorgkring. In deze demo wordt nog geen uitnodiging verstuurd.
+          </p>
+        )}
+      </section>
+
       <section aria-labelledby="set-title" className="care-settings">
         <h2 id="set-title">Instellingen</h2>
-        <label htmlFor="name">Naam op het wandscherm</label>
-        <input id="name" value={state.name} maxLength={30} onChange={(e) => onName(e.target.value)} />
+        <label htmlFor="name">Naam van je naaste</label>
+        <input
+          id="name"
+          value={state.name}
+          maxLength={30}
+          autoComplete="off"
+          placeholder="bv. Maria"
+          aria-describedby="name-hint"
+          onChange={(e) => onName(e.target.value)}
+        />
+        <p id="name-hint" className="care-hint-small">
+          Staat bovenaan het wandscherm in de begroeting. Wordt meteen bewaard.
+        </p>
         <button
           className="link-btn"
           onClick={() => confirm('De voorbeelddag terugzetten? Je eigen planning en vinkjes gaan verloren.') && onReset()}
@@ -153,8 +206,9 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
           )}
         </div>
       </section>
+      </div>
+      </div>
     </main>
-    <SiteFooter />
     </>
   );
 }

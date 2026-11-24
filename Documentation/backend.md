@@ -40,7 +40,7 @@ Done state is stored per day, so daily routines (pills every morning) reset on t
 
 ## Sync
 
-`useDayStore` writes to `localStorage` (key `anker:v1`) and listens to the `storage` event. A tick on the wall screen appears at once in the caregiver tab in the same browser.
+`useDayStore` writes to `localStorage` (key `anker:v2`) and listens to the `storage` event. A tick on the wall screen appears at once in the caregiver tab in the same browser.
 
 shortcut: this only syncs within one browser. For tablet + phone, swap storage for Supabase (table `items`, table `done`, Realtime subscription) and keep `day.ts` unchanged.
 

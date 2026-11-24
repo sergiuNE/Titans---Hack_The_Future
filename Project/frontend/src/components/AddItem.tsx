@@ -5,6 +5,7 @@ const KINDS: { value: Kind; label: string }[] = [
   { value: 'medicijn', label: 'Medicijn' },
   { value: 'maaltijd', label: 'Maaltijd' },
   { value: 'bezoek', label: 'Bezoek' },
+  { value: 'afspraak', label: 'Afspraak' },
   { value: 'taak', label: 'Taak' },
 ];
 
@@ -85,7 +86,9 @@ export function AddItem({ onAdd, today }: { onAdd: (item: Omit<Item, 'id'>) => v
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={kind === 'bezoek' ? 'Lisa komt op bezoek' : kind === 'medicijn' ? 'Middagpillen' : 'Planten water geven'}
+            placeholder={
+              { bezoek: 'Tom komt koffie drinken', medicijn: 'Middagpillen', afspraak: 'Kapper', maaltijd: 'Avondeten', taak: 'Planten water geven' }[kind]
+            }
             maxLength={60}
             aria-invalid={!!error && !title.trim()}
             aria-describedby={error ? 'add-error' : undefined}

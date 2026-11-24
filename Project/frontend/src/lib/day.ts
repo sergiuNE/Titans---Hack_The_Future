@@ -1,6 +1,6 @@
 // Pure day logic: no React, no storage. Time is always passed in.
 
-export type Kind = 'medicijn' | 'maaltijd' | 'bezoek' | 'taak';
+export type Kind = 'medicijn' | 'maaltijd' | 'bezoek' | 'afspraak' | 'taak';
 
 export type Item = {
   id: string;
@@ -23,6 +23,8 @@ export type State = {
   done: Record<string, Record<string, number>>;
   /** Demo only: shift the clock (ms) so a whole day can be shown in a few minutes. */
   offset?: number;
+  /** Care circle: family members who share the overview (invites are mocked). */
+  circle?: string[];
 };
 
 export type SlotState = 'done' | 'open' | 'later';

@@ -9,23 +9,27 @@ export type Action =
   | { type: 'remove'; id: string }
   | { type: 'setName'; name: string }
   | { type: 'setOffset'; offset: number }
+  | { type: 'invite'; member: string }
   | { type: 'replace'; state: State }
   | { type: 'reset' };
 
-const KEY = 'anker:v1';
+// v2: name starts empty (the wall screen asks for it), care circle, kind "afspraak".
+const KEY = 'anker:v2';
 const KEEP_DAYS = 7;
 
-/** Demo day for Maria (78), planned by her daughter Els. */
+/** Demo day for Maria (78), planned by her daughter Els. The name is asked on first start. */
 export function seed(now = Date.now()): State {
   const today = dateKey(now);
   return {
-    name: 'Maria',
+    name: '',
+    circle: ['Els'],
     items: [
       { id: 's1', time: '08:00', title: 'Ontbijt', kind: 'maaltijd' },
       { id: 's2', time: '08:30', title: 'Ochtendpillen', kind: 'medicijn', important: true },
       { id: 's3', time: '10:00', title: 'Tom belt even', kind: 'bezoek', date: today },
       { id: 's4', time: '10:30', title: 'Planten water geven', kind: 'taak' },
       { id: 's5', time: '12:30', title: 'Middageten', kind: 'maaltijd' },
+      { id: 's10', time: '13:30', title: 'Kapper', kind: 'afspraak', date: today },
       { id: 's6', time: '15:00', title: 'Lisa komt (thuisverpleging)', kind: 'bezoek', date: today },
       { id: 's7', time: '18:00', title: 'Avondeten', kind: 'maaltijd' },
       { id: 's8', time: '20:00', title: 'Avondpillen', kind: 'medicijn', important: true },
@@ -54,6 +58,10 @@ export function reducer(state: State, action: Action): State {
       return { ...state, name: action.name };
     case 'setOffset':
       return { ...state, offset: action.offset };
+    case 'invite': {
+      const circle = state.circle ?? [];
+      return circle.includes(action.member) ? state : { ...state, circle: [...circle, action.member] };
+    }
     case 'replace':
       return action.state;
     case 'reset':
@@ -122,13 +130,25 @@ export function useNow(offset = 0, ms = 10_000) {
   return real + offset;
 }
 
-/** "#/zorg" = caregiver view, anything else = wall screen. */
-export function useRoute() {
+export type Route = 'home' | 'scherm' | 'zorg';
+
+/**
+ * Hash routes: "#/scherm" = wall screen, "#/zorg" = caregiver, anything else = home.
+ * "#/waarom" and friends open home and scroll to the section with that id.
+ */
+export function useRoute(): Route {
   const [hash, setHash] = useState(() => location.hash);
   useEffect(() => {
     const on = () => setHash(location.hash);
     addEventListener('hashchange', on);
     return () => removeEventListener('hashchange', on);
   }, []);
-  return hash.startsWith('#/zorg') ? 'zorg' : 'scherm';
+  const route: Route = hash.startsWith('#/scherm') ? 'scherm' : hash.startsWith('#/zorg') ? 'zorg' : 'home';
+  useEffect(() => {
+    const id = hash.replace(/^#\/?/, '');
+    const el = route === 'home' && id ? document.getElementById(id) : null;
+    if (el) el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    else scrollTo(0, 0);
+  }, [hash, route]);
+  return route;
 }

@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { today, dagdeel, momentWord, dateKey, type State } from './day';
 import { reducer } from './store';
+import { describe as describeWeather } from './weather';
+
+describe('weather', () => {
+  it('maps WMO codes to plain words', () => {
+    expect(describeWeather(0).label).toBe('Zonnig');
+    expect(describeWeather(3).label).toBe('Bewolkt');
+    expect(describeWeather(61).label).toBe('Regen');
+    expect(describeWeather(73).label).toBe('Sneeuw');
+  });
+});
 
 const now = new Date(2026, 10, 24, 14, 0).getTime(); // dinsdag 24 nov 2026, 14:00
 const key = dateKey(now);
@@ -58,6 +68,11 @@ describe('reducer', () => {
     expect(on.done[key].pil2).toBe(now);
     const off = reducer(on, { type: 'toggle', id: 'pil2', key, at: now });
     expect(off.done[key].pil2).toBeUndefined();
+  });
+
+  it('invites a family member once', () => {
+    const once = reducer(state, { type: 'invite', member: 'Tom' });
+    expect(reducer(once, { type: 'invite', member: 'Tom' }).circle).toEqual(['Tom']);
   });
 
   it('shifts the demo clock', () => {

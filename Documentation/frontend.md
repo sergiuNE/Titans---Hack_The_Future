@@ -1,13 +1,16 @@
 # Frontend
 
-Stack: Vite + React 19 + TypeScript (strict). No UI library, no router: two views switched by the URL hash.
+Stack: Vite + React 19 + TypeScript (strict). No UI library, no router: three views switched by the URL hash (`useRoute` in `lib/store.ts`).
 
 ## Views
 
 | URL | View | Device | User |
 | --- | --- | --- | --- |
-| `/` | `WallScreen` | tablet on the wall, landscape | person with dementia |
+| `/` (and `#/waarom`, `#/hoe` …) | `Home` | any | visitors, jury |
+| `/#/scherm` | `WallScreen` | tablet on the wall | person with dementia |
 | `/#/zorg` | `CaregiverView` | phone | caregiver |
+
+`SiteHeader` shows on Home and Caregiver, not on the wall screen. `SiteFooter` shows on every view.
 
 ## Structure
 
@@ -15,14 +18,18 @@ Stack: Vite + React 19 + TypeScript (strict). No UI library, no router: two view
 Project/frontend/src/
 ├── App.tsx                 picks the view, sets data-dagdeel / data-view on <html>
 ├── components/
-│   ├── WallScreen.tsx      moment sentence, clock, "Nu doen", pills, past / later
-│   ├── CaregiverView.tsx   alerts, stats, day list, add form, settings
+│   ├── Home.tsx            landing page with live mini wall screen
+│   ├── WallScreen.tsx      name on first start, moment, weather, "Nu doen", pills, past / later, add, undo
+│   ├── CaregiverView.tsx   alerts, stats, day list, add form, care circle, settings, demo clock
 │   ├── AddItem.tsx         form to add a moment (+ photo resize, "important" flag)
+│   ├── Modal.tsx           native <dialog> wrapper
+│   ├── ConfirmDialog.tsx   yes/no on top of Modal, safe choice first and focused
 │   ├── KindIcon.tsx        line icon per kind, or the visitor's photo / initial
-│   └── SiteFooter.tsx      footer, caregiver view only
-public/favicon.svg          anchor icon
+│   ├── SiteHeader.tsx      logo + menu
+│   └── SiteFooter.tsx      footer on every page
 ├── lib/                    logic and state (see backend.md), no JSX
 └── styles.css              all styling; tokens per dagdeel at the top
+public/favicon.svg          anchor icon
 ```
 
 ## Rules
@@ -34,6 +41,8 @@ public/favicon.svg          anchor icon
 - Words never break mid-word: when space runs out, buttons wrap to the next line (`overflow-wrap: break-word`, no `min-width: 0` on text that must stay whole).
 - Every list has an empty state. Every form has a visible error message (`role="alert"`).
 - Accessibility: real `<button>`/`<label>`, visible focus ring, `aria-label` on icon buttons, touch targets at least 44px (96px for "Gedaan"), `prefers-reduced-motion` respected.
+- Responsive breakpoints: wall screen `≤600px` (phone, one column, full-width button), `≥820px` (two lists side by side), `≥1600px` (wider). Caregiver `≥1024px` (two columns). Check 375, 768, 1280, 1366 and 1920 wide before shipping.
+- Undoing a tick on the wall screen always goes through `ConfirmDialog` and shows the time it was ticked.
 - Copy is Dutch, short and kind.
 - No new dependency without a reason that the standard library or React cannot cover.
 
@@ -41,7 +50,7 @@ public/favicon.svg          anchor icon
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173 and http://localhost:5173/#/zorg
+npm run dev      # http://localhost:5173 (home), /#/scherm (wall screen), /#/zorg (caregiver)
 npm test
 npm run build
 ```

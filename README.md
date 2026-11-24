@@ -32,28 +32,42 @@ Ruim 200.000 mensen in België leven met dementie, en tegen 2040 worden dat er m
 
 Anker is een webapp met twee kanten. Els plant de dag op haar gsm. Maria ziet die dag rustig op haar tablet. Wat Maria afvinkt, ziet Els meteen. Anker zet verleden, heden en toekomst terug op hun plek: **Al gebeurd**, **Nu** en **Straks**.
 
-### Wandscherm van Maria (`/`)
+### De website
 
-- Een grote zin "Het is dinsdagmiddag." met de datum en een klok.
+| Pagina | URL | Inhoud |
+| --- | --- | --- |
+| Home | `/` | Wat Anker is, "Waarom wij dit bouwen", het probleem met cijfers, hoe het werkt, Maria en Els, knoppen naar beide schermen. Bovenaan een live mini-versie van het wandscherm |
+| Wandscherm | `/#/scherm` | Het scherm van Maria (tablet aan de muur) |
+| Mantelzorger | `/#/zorg` | De plan-app van Els (gsm) |
+
+Elke pagina heeft onderaan dezelfde footer: logo, korte omschrijving, Pagina's, Voor wie en Project. Er staan geen contactgegevens, adres, ondernemingsnummer of sociale media in. Home en Mantelzorger hebben bovenaan een menubalk. Het wandscherm niet, want dat moet rustig blijven.
+
+### Wandscherm van Maria (`/#/scherm`)
+
+- **Eerste start:** het scherm vraagt groot "Welkom bij Anker. Hoe heet je?" en bewaart de naam. Daarna begroet het: "Goedemorgen, Maria." De naam is later aan te passen via "Naam aanpassen" onderaan het scherm, of door de mantelzorger.
+- Een grote zin "Het is dinsdagmiddag." met de datum, een klok en het weer met een icoon (Open-Meteo, zonder sleutel; offline toont het scherm gewoon geen weer).
+- **Zelf iets toevoegen:** een grote knop opent een venster "Wat wil je niet vergeten?" met "Wat?" en "Hoe laat?". De taak staat meteen bij "Nog te komen".
 - De achtergrond kleurt mee met het dagdeel: ochtend blauw, middag geel, avond roze, nacht donkerblauw. 's Nachts staat er "Het is nacht. Slaap zacht."
 - Eén taak tegelijk met één grote knop in eigen woorden: "Ik heb ze genomen", "Ik heb gegeten", "Gedaan".
 - "Je pillen van vandaag": een vinkje met het uur ("Genomen om 08:35").
-- "Al gebeurd vandaag" en "Nog te komen", met een foto of de initiaal van wie er op bezoek komt.
-- Per ongeluk getikt? "Toch niet" blijft 5 minuten staan.
+- "Al gebeurd vandaag" met het uur waarop iets gedaan is ("Gedaan om 08:02"), en "Nog te komen", met een foto of de initiaal van wie er op bezoek komt.
+- **Vergist?** Bij elke afgevinkte taak staat "Toch niet". Een tik vraagt eerst: "Je tikte om 08:02 dat “Ochtendpillen” gedaan was. Is het toch nog niet gedaan?" De veilige keuze ("Nee, het is gedaan") heeft de focus, en Escape of naast het venster tikken verandert niets.
 - Nooit verwijtend: Maria ziet "Nog niet genomen", nooit "te laat".
 
 ### Plan-app van Els (`/#/zorg`)
 
 - Ziet wat Maria nu ziet en hoeveel pillen er genomen zijn.
 - Krijgt een signaal als een **belangrijk** moment (pillen, voordeur op slot) een uur na tijd nog openstaat.
-- Plant medicijn, maaltijd, bezoek (met foto) of taak, eenmalig of elke dag.
+- Voegt zoveel extra momenten toe als nodig: medicijn, maaltijd, bezoek (met foto), afspraak (bv. kapper) of taak, eenmalig of elke dag.
 - Kan zelf afvinken of een vinkje ongedaan maken.
+- Past de naam van haar naaste aan (Instellingen). De naam wordt meteen bewaard en staat in de begroeting op het wandscherm.
+- **Zorgkring:** nodigt familie uit (bv. Tom), zodat iedereen hetzelfde overzicht heeft. In de demo is dit gemockt: er wordt nog niets verstuurd.
 - **Demo: spring in de tijd** (08:35, 15:00, 20:00, 23:30, +1 uur), zodat de hele dag in een paar minuten te tonen is. Het wandscherm springt mee.
 
 ## Demoscript
 
-1. Open `/` en `/#/zorg` naast elkaar in dezelfde browser.
-2. Tablet: "Goedemorgen, Maria. Het is dinsdagochtend."
+1. Open `/#/scherm` en `/#/zorg` naast elkaar in dezelfde browser.
+2. Tablet: het scherm vraagt "Hoe heet je?". Typ "Maria". Het scherm zegt: "Goedemorgen, Maria. Het is dinsdagochtend."
 3. Gsm: Els voegt "15:30 Tom komt koffie drinken" toe, met foto. De tablet toont Tom meteen bij "Nog te komen".
 4. Spring naar 20:00: "Avondpillen" met een grote knop. Tik op de tablet. De gsm toont het vinkje met het uur.
 5. Spring naar 23:30: het scherm wordt donker. "Slaap zacht."
@@ -75,7 +89,7 @@ Anker is een webapp met twee kanten. Els plant de dag op haar gsm. Maria ziet di
 ```bash
 cd Project/frontend
 npm install
-npm run dev      # wandscherm: http://localhost:5173  ·  mantelzorger: http://localhost:5173/#/zorg
+npm run dev      # home: http://localhost:5173  ·  wandscherm: /#/scherm  ·  mantelzorger: /#/zorg
 npm test
 npm run build
 ```
@@ -97,9 +111,9 @@ Importeer de repo in Vercel met deze instellingen:
 | --- | --- |
 | Hosting | statische build op Vercel, HTTPS-link |
 | Werkende kernflow | moment plannen, op het wandscherm afvinken, status zien bij de mantelzorger |
-| Responsive | wandscherm voor tablet (liggend), plan-app voor gsm |
+| Responsive | getest op gsm (375px), tablet staand (768px), tablet liggend en laptop (1280-1366px) en pc (1920px). Wandscherm: één kolom op gsm met een knop over de volle breedte, twee kolommen vanaf 820px, breder vanaf 1600px. Plan-app: één kolom op gsm en tablet, twee kolommen (planning links, toevoegen en instellingen rechts) vanaf 1024px |
 | Toegankelijk | lettertype Lexend, tekst van minstens 20px op het wandscherm, knop van 96px, hoog contrast per dagdeel, focusring, labels, reduced motion |
-| State en opslag | `localStorage` (`anker:v1`), overleeft een refresh, geschiedenis van 7 dagen |
+| State en opslag | `localStorage` (`anker:v2`): naam, planning, vinkjes en zorgkring overleven een refresh; geschiedenis van 7 dagen |
 | UI-states | "Alles is gedaan", "Slaap zacht", lege planning, formulierfouten, foutieve foto, banner als opslaan faalt, waarschuwing bij belangrijke open momenten |
 | Codekwaliteit | UI in `components/`, logica in `lib/`, pure `today()` met tests |
 
@@ -123,4 +137,13 @@ Project/frontend/ de webapp
 
 ## Presentatie
 
-[Documentation/Anker-pitch.pptx](Documentation/Anker-pitch.pptx): 13 slides met sprekersnotities.
+[Documentation/Anker-pitch.pptx](Documentation/Anker-pitch.pptx): 12 slides met sprekersnotities, in deze volgorde:
+
+| Deel | Slides |
+| --- | --- |
+| Titel | Anker |
+| Probleem | Waarom dit persoonlijk is · De Desync bij dementie, met cijfers · Maria en Els |
+| Oplossing | Concept · Wandscherm · Het licht vertelt de tijd · Plan-app · Techniek |
+| Scopebepaling | Impact-moeitematrix: quick wins, next steps, fill-ins, tijdvreters |
+| Demo | Demoscript in 6 stappen |
+| Einde | Slotzin |
