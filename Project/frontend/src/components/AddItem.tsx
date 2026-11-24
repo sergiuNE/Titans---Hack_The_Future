@@ -24,14 +24,14 @@ export function AddItem({ onAdd, today }: { onAdd: (item: Omit<Item, 'id'>) => v
   const [kind, setKind] = useState<Kind>('medicijn');
   const [time, setTime] = useState('09:00');
   const [title, setTitle] = useState('');
-  const [daily, setDaily] = useState(true);
+  const [date, setDate] = useState(today);
+  const [daily, setDaily] = useState(false);
   const [important, setImportant] = useState(true);
   const [photo, setPhoto] = useState<string>();
   const [error, setError] = useState('');
 
   function pickKind(k: Kind) {
     setKind(k);
-    setDaily(k !== 'bezoek'); // visits are usually one-off, routines repeat
     setImportant(k === 'medicijn');
     if (k !== 'bezoek') setPhoto(undefined);
   }
@@ -51,11 +51,12 @@ export function AddItem({ onAdd, today }: { onAdd: (item: Omit<Item, 'id'>) => v
     const t = title.trim();
     if (!t) return setError(kind === 'bezoek' ? 'Schrijf wie er komt, bv. “Lisa komt op bezoek”.' : 'Schrijf wat er moet gebeuren.');
     if (!/^\d{2}:\d{2}$/.test(time)) return setError('Kies een uur.');
+    if (!daily && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today)) return setError('Kies vandaag of een dag later.');
     onAdd({
       kind,
       time,
       title: t,
-      ...(daily ? {} : { date: today }),
+      ...(daily ? {} : { date }),
       ...(photo ? { photo } : {}),
       ...(important && kind !== 'bezoek' ? { important } : {}),
     });
@@ -77,6 +78,12 @@ export function AddItem({ onAdd, today }: { onAdd: (item: Omit<Item, 'id'>) => v
       </fieldset>
 
       <div className="add-row">
+        {!daily && (
+          <label className="add-date">
+            Datum
+            <input type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)} required />
+          </label>
+        )}
         <label className="add-time">
           Uur
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required />

@@ -38,7 +38,9 @@ export function Home({ state, now }: { state: State; now: number }) {
             </span>
           )}
           <span className="pv-meds">
-            Pillen vandaag: {t.medsTaken} van {t.meds.length} genomen
+            {t.slots.length === 0
+              ? 'Nog niets gepland. Open het wandscherm om je dag te plannen.'
+              : `Pillen vandaag: ${t.medsTaken} van ${t.meds.length} genomen`}
           </span>
         </a>
       </section>

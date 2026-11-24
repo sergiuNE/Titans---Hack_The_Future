@@ -6,6 +6,7 @@ import { CaregiverView } from './components/CaregiverView';
 import { Home } from './components/Home';
 import { SiteHeader } from './components/SiteHeader';
 import { SiteFooter } from './components/SiteFooter';
+import { Privacy, Terms } from './components/Legal';
 
 export default function App() {
   const { state, dispatch, saveError } = useDayStore();
@@ -42,9 +43,12 @@ export default function App() {
           onName={setName}
           onOffset={(o) => dispatch({ type: 'setOffset', offset: o })}
           onInvite={(member) => dispatch({ type: 'invite', member })}
+          onDemo={() => dispatch({ type: 'loadDemo' })}
           onReset={() => dispatch({ type: 'reset' })}
         />
       )}
+      {route === 'privacy' && <Privacy />}
+      {route === 'voorwaarden' && <Terms />}
       <SiteFooter />
     </>
   );

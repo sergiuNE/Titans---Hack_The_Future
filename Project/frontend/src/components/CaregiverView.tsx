@@ -3,6 +3,10 @@ import { KindIcon } from './KindIcon';
 import { useState, type FormEvent } from 'react';
 import { AddItem } from './AddItem';
 
+/** "2026-11-25" -> "woensdag 25 november" */
+const formatDay = (key: string) =>
+  new Date(key + 'T12:00').toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' });
+
 // Demo only: jump through the day so the jury sees "Straks" become "Nu" become "Al gebeurd".
 const JUMPS = ['08:35', '15:00', '20:00', '23:30'];
 
@@ -16,15 +20,19 @@ type Props = {
   onName: (name: string) => void;
   onOffset: (offset: number) => void;
   onInvite: (member: string) => void;
+  onDemo: () => void;
   onReset: () => void;
 };
 
 /** Caregiver on the phone: plan the day, see what happened, act on what is late. */
-export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove, onName, onOffset, onInvite, onReset }: Props) {
+export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove, onName, onOffset, onInvite, onDemo, onReset }: Props) {
   const t = today(state, now);
   const late = t.open.filter((s) => s.late);
   const ticked = state.done[t.key] ?? {};
   const name = state.name.trim() || 'je naaste';
+  const upcoming = state.items
+    .filter((i) => i.date && i.date > t.key)
+    .sort((a, b) => (a.date! + a.time).localeCompare(b.date! + b.time));
   const [invite, setInvite] = useState('');
   const [invited, setInvited] = useState('');
 
@@ -129,6 +137,31 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
             })}
           </ul>
         )}
+
+        {upcoming.length > 0 && (
+          <>
+            <h2 className="care-subhead">Komende dagen</h2>
+            <ul className="care-list">
+              {upcoming.map((s) => (
+                <li key={s.id} className="care-row later">
+                  <span className="t">{s.time}</span>
+                  <KindIcon item={s} size={32} />
+                  <span className="what">
+                    {s.title}
+                    <span className="status">{formatDay(s.date!)}</span>
+                  </span>
+                  <span className="row-tools">
+                    <button className="x-btn" aria-label={`${s.title} verwijderen`} onClick={() => onRemove(s.id)}>
+                      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </section>
 
       <div className="care-side">
@@ -181,15 +214,23 @@ export function CaregiverView({ state, now, saveError, onToggle, onAdd, onRemove
         </p>
         <button
           className="link-btn"
-          onClick={() => confirm('De voorbeelddag terugzetten? Je eigen planning en vinkjes gaan verloren.') && onReset()}
+          onClick={() => confirm('Alles wissen? De naam, de planning, de vinkjes en de zorgkring verdwijnen van dit toestel.') && onReset()}
         >
-          Voorbeelddag terugzetten
+          Alles wissen
         </button>
       </section>
 
       <section aria-labelledby="demo-title" className="care-demo">
-        <h2 id="demo-title">Demo: spring in de tijd</h2>
-        <p className="care-sub">Het wandscherm springt mee. Alleen voor de presentatie.</p>
+        <h2 id="demo-title">Demo</h2>
+        <p className="care-sub">Alleen voor de presentatie. Het wandscherm springt mee.</p>
+        <div className="demo-jumps">
+          <button
+            className="chip-btn"
+            onClick={() => (t.slots.length === 0 || confirm('De voorbeelddag laden? Je eigen planning en vinkjes worden vervangen.')) && onDemo()}
+          >
+            Voorbeelddag laden
+          </button>
+        </div>
         <div className="demo-jumps">
           {JUMPS.map((hhmm) => (
             <button key={hhmm} className="chip-btn" onClick={() => onOffset(timeOnDay(hhmm, Date.now()) - Date.now())}>

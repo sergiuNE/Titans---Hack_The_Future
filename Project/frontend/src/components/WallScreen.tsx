@@ -4,6 +4,7 @@ import { useWeather, type Sky } from '../lib/weather';
 import { KindIcon } from './KindIcon';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Modal } from './Modal';
+import { DayPlanner } from './DayPlanner';
 
 const greeting = { ochtend: 'Goedemorgen', middag: 'Goedemiddag', avond: 'Goedenavond', nacht: 'Goedenacht' };
 
@@ -70,7 +71,14 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
               Welkom bij Anker. Hoe heet je?
             </p>
             <p className="focus-sub">Dan kan het scherm je elke dag bij naam begroeten.</p>
-            <NameForm initial="" onSave={onName} submitLabel="Bewaar mijn naam" />
+            <NameForm
+              initial=""
+              submitLabel="Bewaar mijn naam"
+              onSave={(n) => {
+                onName(n);
+                setAdding(true); // next step: plan the day
+              }}
+            />
           </div>
         </section>
       ) : (
@@ -86,6 +94,16 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
               <button className="done-btn" onClick={() => onToggle(focus.id)}>
                 <CheckIcon />
                 {doneLabel[focus.kind]}
+              </button>
+            </>
+          ) : t.slots.length === 0 ? (
+            <>
+              <div className="focus-text">
+                <p className="focus-title">Nog niets gepland voor vandaag.</p>
+                <p className="focus-sub">Kies een datum en schrijf wat er moet gebeuren.</p>
+              </div>
+              <button className="done-btn" onClick={() => setAdding(true)}>
+                <span aria-hidden="true">+</span> Plan je dag
               </button>
             </>
           ) : dagdeel(now) === 'nacht' ? (
@@ -173,7 +191,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
             </ul>
           )}
           <button className="wall-add" onClick={() => setAdding(true)}>
-            <span aria-hidden="true">+</span> Zelf iets toevoegen
+            <span aria-hidden="true">+</span> Dag plannen
           </button>
         </section>
       </div>
@@ -229,15 +247,19 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
 
       <Modal open={adding} labelledBy="add-title" onClose={() => setAdding(false)}>
         <p id="add-title" className="confirm-title">
-          Wat wil je niet vergeten?
+          Plan je dag
         </p>
-        <QuickAdd
-          now={now}
-          onSave={(title, time) => {
-            onAdd({ kind: 'taak', title, time, date: t.key });
+        <DayPlanner
+          today={t.key}
+          plannedOn={(date) =>
+            state.items.filter((i) => !i.date || i.date === date).sort((a, b) => a.time.localeCompare(b.time)).map((i) => `${i.time} ${i.title}`)
+          }
+          onSave={(items) => {
+            items.forEach(onAdd);
             setAdding(false);
           }}
           onCancel={() => setAdding(false)}
+          cancelLabel={t.slots.length === 0 ? 'Later' : 'Annuleer'}
         />
       </Modal>
     </main>
@@ -282,50 +304,6 @@ function NameForm({ initial, submitLabel, onSave, onCancel }: { initial: string;
             Annuleer
           </button>
         )}
-      </div>
-    </form>
-  );
-}
-
-function QuickAdd({ now, onSave, onCancel }: { now: number; onSave: (title: string, time: string) => void; onCancel: () => void }) {
-  const d = new Date(now + 3600_000);
-  const [title, setTitle] = useState('');
-  const [time, setTime] = useState(`${String(d.getHours()).padStart(2, '0')}:00`);
-  const [error, setError] = useState('');
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) return setError('Schrijf wat je wilt doen.');
-    if (!/^\d{2}:\d{2}$/.test(time)) return setError('Kies een uur.');
-    onSave(title.trim(), time);
-  }
-  return (
-    <form className="big-form" onSubmit={submit} noValidate>
-      <label className="big-label">
-        Wat?
-        <input
-          className="big-input"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="bv. Tom terugbellen"
-          maxLength={60}
-          autoFocus
-          aria-invalid={!!error && !title.trim()}
-        />
-      </label>
-      <label className="big-label">
-        Hoe laat?
-        <input className="big-input big-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-      </label>
-      {error && (
-        <p className="big-error" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="confirm-actions">
-        <button className="confirm-keep">Zet op mijn dag</button>
-        <button type="button" className="confirm-undo" onClick={onCancel}>
-          Annuleer
-        </button>
       </div>
     </form>
   );

@@ -24,22 +24,22 @@ export function SiteFooter() {
           </ul>
         </nav>
 
-        <div>
-          <h2>Voor wie</h2>
+        <nav aria-labelledby="foot-legal">
+          <h2 id="foot-legal">Juridisch</h2>
           <ul>
-            <li>Personen met dementie</li>
-            <li>Familie en mantelzorgers</li>
-            <li>Thuisverpleging</li>
+            <li><a href="#/privacy">Privacybeleid</a></li>
+            <li><a href="#/voorwaarden">Gebruiksvoorwaarden</a></li>
+            <li><a href="#/privacy">Cookies: we plaatsen er geen</a></li>
           </ul>
-        </div>
+        </nav>
 
         <div>
           <h2>Project</h2>
           <ul>
             <li>Hack The Future 2026</li>
-            <li>Challenge: Claim de tijd terug</li>
-            <li>Little Miss Robot</li>
+            <li>Challenge van Little Miss Robot</li>
             <li>Team Titans</li>
+            <li>Laurens Rombout en Sergiu Neagu</li>
           </ul>
         </div>
       </div>

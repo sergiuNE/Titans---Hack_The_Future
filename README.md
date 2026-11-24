@@ -2,7 +2,7 @@
 
 Houvast voor wie de tijd kwijt is.
 
-Hack The Future 2026 · Little Miss Robot challenge "Claim de tijd terug!" · Team Titans
+Hack The Future 2026 · Little Miss Robot challenge "Claim de tijd terug!" · Team Titans: Laurens Rombout en Sergiu Neagu
 
 ## Waarom wij dit bouwen
 
@@ -37,6 +37,8 @@ Anker is een webapp met twee kanten. Els plant de dag op haar gsm. Maria ziet di
 | Pagina | URL | Inhoud |
 | --- | --- | --- |
 | Home | `/` | Wat Anker is, "Waarom wij dit bouwen", het probleem met cijfers, hoe het werkt, Maria en Els, knoppen naar beide schermen. Bovenaan een live mini-versie van het wandscherm |
+| Privacybeleid | `/#/privacy` | Welke gegevens, waar ze staan (alleen op je toestel), cookies (geen), diensten van derden, je rechten |
+| Gebruiksvoorwaarden | `/#/voorwaarden` | Prototype, geen medisch hulpmiddel, geen garanties, aansprakelijkheid, Belgisch recht |
 | Wandscherm | `/#/scherm` | Het scherm van Maria (tablet aan de muur) |
 | Mantelzorger | `/#/zorg` | De plan-app van Els (gsm) |
 
@@ -44,9 +46,9 @@ Elke pagina heeft onderaan dezelfde footer: logo, korte omschrijving, Pagina's, 
 
 ### Wandscherm van Maria (`/#/scherm`)
 
-- **Eerste start:** het scherm vraagt groot "Welkom bij Anker. Hoe heet je?" en bewaart de naam. Daarna begroet het: "Goedemorgen, Maria." De naam is later aan te passen via "Naam aanpassen" onderaan het scherm, of door de mantelzorger.
+- **Leeg starten, geen voorbeelddata:** het scherm vraagt groot "Welkom bij Anker. Hoe heet je?" en bewaart de naam. Daarna begroet het: "Goedemorgen, Maria." De naam is later aan te passen via "Naam aanpassen" onderaan het scherm, of door de mantelzorger.
+- **Plan je dag:** meteen na de naam opent een popup. Je kiest een **datum** en vult de taken voor die dag in (wat, hoe laat, soort), met "+ Nog een taak" voor meer. De popup toont wat al op die dag gepland staat. Later opnieuw openen kan met "+ Dag plannen".
 - Een grote zin "Het is dinsdagmiddag." met de datum, een klok en het weer met een icoon (Open-Meteo, zonder sleutel; offline toont het scherm gewoon geen weer).
-- **Zelf iets toevoegen:** een grote knop opent een venster "Wat wil je niet vergeten?" met "Wat?" en "Hoe laat?". De taak staat meteen bij "Nog te komen".
 - De achtergrond kleurt mee met het dagdeel: ochtend blauw, middag geel, avond roze, nacht donkerblauw. 's Nachts staat er "Het is nacht. Slaap zacht."
 - Eén taak tegelijk met één grote knop in eigen woorden: "Ik heb ze genomen", "Ik heb gegeten", "Gedaan".
 - "Je pillen van vandaag": een vinkje met het uur ("Genomen om 08:35").
@@ -68,10 +70,12 @@ Elke pagina heeft onderaan dezelfde footer: logo, korte omschrijving, Pagina's, 
 
 1. Open `/#/scherm` en `/#/zorg` naast elkaar in dezelfde browser.
 2. Tablet: het scherm vraagt "Hoe heet je?". Typ "Maria". Het scherm zegt: "Goedemorgen, Maria. Het is dinsdagochtend."
-3. Gsm: Els voegt "15:30 Tom komt koffie drinken" toe, met foto. De tablet toont Tom meteen bij "Nog te komen".
-4. Spring naar 20:00: "Avondpillen" met een grote knop. Tik op de tablet. De gsm toont het vinkje met het uur.
-5. Spring naar 23:30: het scherm wordt donker. "Slaap zacht."
-6. Zet daarna "Echte tijd" terug.
+3. De popup "Plan je dag" opent: kies de datum, vul "Pillen nemen" (medicijn) en "Tom komt koffie drinken" (bezoek) in en bewaar.
+4. Gsm: Els ziet de taken meteen en voegt de kapper toe. Wil je een volle dag tonen? Klik in de plan-app op "Voorbeelddag laden".
+5. Spring naar 20:00: "Avondpillen" met een grote knop. Tik op de tablet. De gsm toont het vinkje met het uur.
+6. Tik "Toch niet": Anker vraagt eerst of het klopt.
+7. Spring naar 23:30: het scherm wordt donker. "Slaap zacht."
+8. Zet daarna "Echte tijd" terug.
 
 ## Stack
 
@@ -94,7 +98,7 @@ npm test
 npm run build
 ```
 
-De eerste keer laadt de app een voorbeelddag voor Maria. Je kunt die terugzetten via Instellingen in de plan-app.
+De app start leeg. Een voorbeelddag voor Maria laad je alleen als je dat zelf kiest (plan-app, Demo, "Voorbeelddag laden"). "Alles wissen" onder Instellingen zet alles terug naar leeg.
 
 ## Deploy (Vercel)
 
@@ -137,13 +141,13 @@ Project/frontend/ de webapp
 
 ## Presentatie
 
-[Documentation/Anker-pitch.pptx](Documentation/Anker-pitch.pptx): 12 slides met sprekersnotities, in deze volgorde:
+[Documentation/Anker-pitch.pptx](Documentation/Anker-pitch.pptx): 14 slides met sprekersnotities, fade-overgangen en animaties die vanzelf starten (elementen verschijnen na elkaar). Elk deel heeft de kleur van een dagdeel uit de app, en alle screenshots zitten in een tablet-, gsm- of laptopframe.
 
 | Deel | Slides |
 | --- | --- |
-| Titel | Anker |
+| Titel | Anker, met Laurens Rombout en Sergiu Neagu |
 | Probleem | Waarom dit persoonlijk is · De Desync bij dementie, met cijfers · Maria en Els |
-| Oplossing | Concept · Wandscherm · Het licht vertelt de tijd · Plan-app · Techniek |
-| Scopebepaling | Impact-moeitematrix: quick wins, next steps, fill-ins, tijdvreters |
+| Oplossing | Concept · Leeg starten (naam, Plan je dag) · Wandscherm · Het licht vertelt de tijd · Plan-app · Website · Techniek |
+| Scopebepaling | Impact-moeitematrix, met talen (NL, EN, FR) en donkere/lichte modus |
 | Demo | Demoscript in 6 stappen |
-| Einde | Slotzin |
+| Einde | Slotzin en vragen |

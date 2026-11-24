@@ -11,18 +11,24 @@ export type Action =
   | { type: 'setOffset'; offset: number }
   | { type: 'invite'; member: string }
   | { type: 'replace'; state: State }
+  | { type: 'loadDemo' }
   | { type: 'reset' };
 
-// v2: name starts empty (the wall screen asks for it), care circle, kind "afspraak".
-const KEY = 'anker:v2';
+// v3: the app starts empty. Name first, then the day is planned by the user.
+const KEY = 'anker:v3';
 const KEEP_DAYS = 7;
 
-/** Demo day for Maria (78), planned by her daughter Els. The name is asked on first start. */
-export function seed(now = Date.now()): State {
+/** Fresh start: no name, no tasks. */
+export function seed(): State {
+  return { name: '', circle: [], items: [], done: {} };
+}
+
+/** Demo day for Maria (78), planned by her daughter Els. Only loaded on request (demo button). */
+export function demo(now = Date.now()): State {
   const today = dateKey(now);
   return {
-    name: '',
-    circle: ['Els'],
+    name: 'Maria',
+    circle: ['Els', 'Tom'],
     items: [
       { id: 's1', time: '08:00', title: 'Ontbijt', kind: 'maaltijd' },
       { id: 's2', time: '08:30', title: 'Ochtendpillen', kind: 'medicijn', important: true },
@@ -64,6 +70,10 @@ export function reducer(state: State, action: Action): State {
     }
     case 'replace':
       return action.state;
+    case 'loadDemo': {
+      const d = demo();
+      return { ...d, name: state.name.trim() || d.name, offset: state.offset };
+    }
     case 'reset':
       return seed();
   }
@@ -130,7 +140,8 @@ export function useNow(offset = 0, ms = 10_000) {
   return real + offset;
 }
 
-export type Route = 'home' | 'scherm' | 'zorg';
+export type Route = 'home' | 'scherm' | 'zorg' | 'privacy' | 'voorwaarden';
+const PAGES: Route[] = ['scherm', 'zorg', 'privacy', 'voorwaarden'];
 
 /**
  * Hash routes: "#/scherm" = wall screen, "#/zorg" = caregiver, anything else = home.
@@ -143,7 +154,7 @@ export function useRoute(): Route {
     addEventListener('hashchange', on);
     return () => removeEventListener('hashchange', on);
   }, []);
-  const route: Route = hash.startsWith('#/scherm') ? 'scherm' : hash.startsWith('#/zorg') ? 'zorg' : 'home';
+  const route: Route = PAGES.find((p) => hash.startsWith('#/' + p)) ?? 'home';
   useEffect(() => {
     const id = hash.replace(/^#\/?/, '');
     const el = route === 'home' && id ? document.getElementById(id) : null;

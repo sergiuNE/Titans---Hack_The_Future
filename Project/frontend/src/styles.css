@@ -232,7 +232,33 @@ p { text-wrap: pretty; }
 }
 
 /* ---------- Caregiver (phone) ---------- */
-[data-view='zorg'] body { background: #eef1f4; color: #16202b; }
+[data-view='zorg'] body, [data-view='privacy'] body, [data-view='voorwaarden'] body { background: #eef1f4; color: #16202b; }
+
+/* ---------- Legal pages ---------- */
+.legal { max-width: 760px; margin: 0 auto; padding: clamp(32px, 6vw, 72px) 24px 96px; color: #16202b; }
+.legal h1 { font-size: clamp(36px, 5vw, 56px); line-height: 1.05; letter-spacing: -0.03em; margin: 8px 0 16px; }
+.legal h2 { font-size: 22px; margin: 40px 0 10px; }
+.legal p, .legal li { font-size: 17px; line-height: 1.7; color: #3c4652; }
+.legal ul { padding-left: 22px; }
+.legal-lead { font-size: 20px !important; color: #16202b !important; }
+.legal-meta { font-size: 14px !important; color: #5b6775; margin: 0; }
+
+/* ---------- Day planner (popup) ---------- */
+.planner { max-width: none; margin-top: 0; }
+.planner-rows { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; }
+.planner-rows legend { margin-bottom: 8px; }
+.planner-row { display: grid; grid-template-columns: 1fr 180px 170px auto; gap: 8px; align-items: center; }
+.planner-row .big-input { min-height: 64px; font-size: clamp(20px, 2vw, 24px); padding: 0 14px; }
+.big-date { max-width: 300px; }
+.big-select { padding: 0 14px; }
+.row-remove { width: 56px; height: 64px; border: 0; background: none; color: var(--soft); font-size: 30px; cursor: pointer; border-radius: 12px; }
+.row-remove:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.planner-note { margin: 0; font-size: 18px; color: var(--soft); }
+.confirm:has(.planner) { width: min(920px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto; }
+@media (max-width: 700px) {
+  .planner-row { grid-template-columns: 1fr 1fr auto; }
+  .planner-row .big-input:first-of-type { grid-column: 1 / -1; }
+}
 .care {
   --c-ink: #16202b;
   --c-soft: #5b6775;
@@ -298,7 +324,9 @@ p { text-wrap: pretty; }
 .kinds label.on { background: var(--c-ink); color: #fff; border-color: var(--c-ink); }
 .kinds label:has(input:focus-visible) { outline: 3px solid var(--c-blue); outline-offset: 2px; }
 .kinds input { position: absolute; opacity: 0; pointer-events: none; }
-.add-row { display: grid; grid-template-columns: 7.5em 1fr; gap: 12px; }
+.add-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5em, 1fr)); gap: 12px; }
+.add-row .add-title { grid-column: 1 / -1; }
+.care-subhead { font-size: 18px; margin: 24px 0 12px; }
 .add label { font-weight: 700; }
 .add-photo { display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--c-blue); }
 .add-photo img { border-radius: 50%; object-fit: cover; }

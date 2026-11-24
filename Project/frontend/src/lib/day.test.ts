@@ -70,6 +70,14 @@ describe('reducer', () => {
     expect(off.done[key].pil2).toBeUndefined();
   });
 
+  it('starts empty and loads the demo day only on request, keeping the chosen name', () => {
+    const fresh = reducer(state, { type: 'reset' });
+    expect([fresh.name, fresh.items.length]).toEqual(['', 0]);
+    const d = reducer({ ...fresh, name: 'Rosa' }, { type: 'loadDemo' });
+    expect(d.name).toBe('Rosa');
+    expect(d.items.length).toBeGreaterThan(0);
+  });
+
   it('invites a family member once', () => {
     const once = reducer(state, { type: 'invite', member: 'Tom' });
     expect(reducer(once, { type: 'invite', member: 'Tom' }).circle).toEqual(['Tom']);
