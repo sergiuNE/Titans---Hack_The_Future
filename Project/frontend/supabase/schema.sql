@@ -96,6 +96,12 @@ alter table public.item       enable row level security;
 alter table public.completion enable row level security;
 alter table public.pair_attempt enable row level security; -- no policies: nobody reads it directly
 
+-- Table privileges for signed-in users (newer Supabase projects do not grant these by default).
+-- Row Level Security below still decides which rows they see.
+grant usage on schema public to authenticated;
+grant select on public.circle, public.member to authenticated;
+grant select, insert, update, delete on public.item, public.completion to authenticated;
+
 drop policy if exists circle_select on public.circle;
 drop policy if exists circle_update on public.circle;
 create policy circle_select on public.circle for select to authenticated using (public.is_member(id));
