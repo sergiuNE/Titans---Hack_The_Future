@@ -48,7 +48,7 @@ Alles is beschikbaar in het Nederlands, Frans en Engels. De taal kies je per toe
 
 ### Wandscherm (`/vandaag`)
 
-- **Leeg starten, geen voorbeelddata:** het scherm vraagt groot "Welkom bij Anker. Hoe heet je?" en bewaart de naam. Daarna begroet het de persoon bij naam ("Goedemorgen, …"). De naam is later aan te passen via "Naam aanpassen" onderaan het scherm, of door de mantelzorger.
+- **Leeg starten, geen voorbeelddata:** het scherm vraagt groot "Welkom bij Anker. Hoe heet je?" en bewaart de naam. Daarna begroet het de persoon bij naam ("Goedemorgen, …"). De naam past de mantelzorger later aan in de plan-app. Onderaan het scherm staan alleen de tekstgrootte en de taal.
 - **Plan je dag:** meteen na de naam opent een popup. Je kiest een **datum** en vult de taken voor die dag in (wat, hoe laat, soort), met "+ Nog een taak" voor meer. De popup toont wat al op die dag gepland staat. Later opnieuw openen kan met "+ Dag plannen".
 - Een grote zin "Het is dinsdagmiddag." met de datum, een klok en het weer met een icoon (Open-Meteo, zonder sleutel; offline toont het scherm gewoon geen weer). 's Ochtends en 's middags staat er één warme weertip: "Het is koud buiten. Neem je warme jas.", "Het regent. Neem een paraplu mee." of "Het is warm. Drink genoeg water."
 - **Wie is dit?** Een bezoek met foto of initiaal is aan te tikken. Een rustig groot venster toont de foto, de naam en wie het is, bv. "Tom" en "je zoon" of "Lisa" en "thuisverpleging". De mantelzorger vult naam en relatie in bij het bezoek (optioneel).

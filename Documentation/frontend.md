@@ -49,7 +49,7 @@ Anything that uses state, effects, `localStorage`, the clock or `window` is a cl
 
 - **Wie is dit?** A visitor (`bezoek`) in "Straks", "Nog te komen" or "Al gebeurd" is a button around its photo or initial. It opens a calm modal with the big photo, `who` (falls back to the title) and `relation`.
 - **Weather tip:** `weatherTip(weather, dagdeel)` in `lib/weather.ts` (pure, tested). Only in ochtend and middag. Rain first, then cold (< 8 C), then hot (> 25 C), else nothing.
-- **Text size:** "Tekst: Normaal / Groter / Grootst" next to "Naam aanpassen". Stored per device in `localStorage` key `anker:fontscale` (`lib/fontscale.ts`), never synced, not in `State`. It sets `data-fontscale` on `.wall`, which sets `--fs` (body text, buttons: 1 / 1.25 / 1.5) and `--fs-t` (titles, half the rate). The moment sentence and the clock are not scaled. Check 375 and 768 wide at "Grootst".
+- **Text size:** "Tekst: Normaal / Groter / Grootst" at the bottom, next to the language choice. Stored per device in `localStorage` key `anker:fontscale` (`lib/fontscale.ts`), never synced, not in `State`. It sets `data-fontscale` on `.wall`, which sets `--fs` (body text, buttons: 1 / 1.25 / 1.5) and `--fs-t` (titles, half the rate). The moment sentence and the clock are not scaled. Check 375 and 768 wide at "Grootst".
 - **Slow first load (Supabase):** `WallPage` shows a calm "Even geduld, Anker zoekt verbinding." after 5 seconds of loading. The access check (10 s) and the store (30 s poll) keep retrying.
 
 ## Caregiver details
@@ -73,7 +73,7 @@ Dutch (default), French and English. No library: `lib/i18n.ts` holds the typed d
 - Components never touch `localStorage` or compute statuses. They get data from `today()` and call callbacks. Logic lives in `src/lib`.
 - **Wall screen = zero learning curve.** One action at a time, one button. No menus, no scrolling needed for the main action, no small text (minimum 20px), no icons without words.
 - The wall screen never says "te laat" or "vergeten". It says "Nog niet genomen". Warnings are for the caregiver only.
-- The wall screen has no footer, no links in view except a small "Voor de mantelzorger" at the bottom. The site footer is only on `/`, `/privacy` and `/voorwaarden`.
+- The wall screen has no footer, no links: at the bottom only the text size and language choice. The name is changed by the caregiver. The site footer is only on `/`, `/privacy` and `/voorwaarden`.
 - Words never break mid-word: when space runs out, buttons wrap to the next line (`overflow-wrap: break-word`, no `min-width: 0` on text that must stay whole).
 - Every list has an empty state. Every form has a visible error message (`role="alert"`).
 - Accessibility: real `<button>`/`<label>`, visible focus ring, `aria-label` on icon buttons, touch targets at least 44px (96px for "Gedaan"), `prefers-reduced-motion` respected.
