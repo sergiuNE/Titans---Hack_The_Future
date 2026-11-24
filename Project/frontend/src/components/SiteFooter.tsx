@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-/** Site footer on every page. No contact details, address, company number or social links. */
+/** Site footer on the home and legal pages. No contact details, address, company number or social links. */
 export function SiteFooter() {
   return (
     <footer className="site-footer">
@@ -19,8 +19,6 @@ export function SiteFooter() {
           <h2 id="foot-pages">Pagina's</h2>
           <ul>
             <li><Link href="/">Home</Link></li>
-            <li><Link href="/#waarom">Waarom Anker</Link></li>
-            <li><Link href="/#hoe">Hoe het werkt</Link></li>
             <li><Link href="/vandaag">Wandscherm</Link></li>
             <li><Link href="/plan">Mantelzorger</Link></li>
           </ul>

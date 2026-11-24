@@ -6,12 +6,12 @@ Stack: Next.js (App Router) + React 19 + TypeScript (strict). No UI library. Eve
 
 | URL | View | Device | User |
 | --- | --- | --- | --- |
-| `/` (and `/#waarom`, `/#hoe` ...) | `Home` | any | visitors, jury |
+| `/` | `Home` (hero only) | any | visitors, jury |
 | `/vandaag` | `WallScreen` | tablet on the wall | person with dementia |
 | `/plan` | `CaregiverView` | phone | caregiver |
 | `/privacy`, `/voorwaarden` | `Privacy`, `Terms` | any | visitors |
 
-`SiteHeader` shows on every page except the wall screen. `SiteFooter` shows on every view.
+`SiteHeader` shows on every page except the wall screen. `SiteFooter` shows on `/`, `/privacy` and `/voorwaarden`, not on the wall screen or the caregiver view.
 
 ## Structure
 
@@ -27,8 +27,8 @@ Project/frontend/src/
 ├── components/
 │   ├── DayProvider.tsx     client: loads the state and the clock after mount, sets data-dagdeel / data-view on <html>
 │   ├── Pages.tsx           HomePage, WallPage, PlanPage: neutral loading state, then the view
-│   ├── SiteChrome.tsx      header (not on /vandaag) and footer around every page
-│   ├── Home.tsx            landing page with live mini wall screen
+│   ├── SiteChrome.tsx      header (not on /vandaag) and footer (not on /vandaag or /plan)
+│   ├── Home.tsx            landing page: hero with live mini wall screen and buttons to both views
 │   ├── WallScreen.tsx      name on first start, moment, weather + tip, "Nu doen", pills, past / later, "Wie is dit?", text size, add, undo
 │   ├── CaregiverView.tsx   alerts, "Vandaag bij ..." overview card (full from 18:00), stats, day list, add form, care circle, settings, demo clock
 │   ├── AddItem.tsx         form to add a moment (+ photo resize, "important" flag, name and relation for visits)
@@ -37,7 +37,7 @@ Project/frontend/src/
 │   ├── KindIcon.tsx        line icon per kind, or the visitor's photo / initial
 │   ├── Legal.tsx           privacy policy and terms
 │   ├── SiteHeader.tsx      logo + menu
-│   └── SiteFooter.tsx      footer on every page
+│   └── SiteFooter.tsx      footer on home and legal pages
 ├── lib/                    logic and state (see backend.md), no JSX
 └── styles.css              all styling; tokens per dagdeel at the top
 public/favicon.svg          anchor icon
@@ -62,7 +62,7 @@ Anything that uses state, effects, `localStorage`, the clock or `window` is a cl
 - Components never touch `localStorage` or compute statuses. They get data from `today()` and call callbacks. Logic lives in `src/lib`.
 - **Wall screen = zero learning curve.** One action at a time, one button. No menus, no scrolling needed for the main action, no small text (minimum 20px), no icons without words.
 - The wall screen never says "te laat" or "vergeten". It says "Nog niet genomen". Warnings are for the caregiver only.
-- The wall screen has no footer, no links in view except a small "Voor de mantelzorger" at the bottom. The site footer lives on the caregiver view.
+- The wall screen has no footer, no links in view except a small "Voor de mantelzorger" at the bottom. The site footer is only on `/`, `/privacy` and `/voorwaarden`.
 - Words never break mid-word: when space runs out, buttons wrap to the next line (`overflow-wrap: break-word`, no `min-width: 0` on text that must stay whole).
 - Every list has an empty state. Every form has a visible error message (`role="alert"`).
 - Accessibility: real `<button>`/`<label>`, visible focus ring, `aria-label` on icon buttons, touch targets at least 44px (96px for "Gedaan"), `prefers-reduced-motion` respected.

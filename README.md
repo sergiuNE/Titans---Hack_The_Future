@@ -36,13 +36,13 @@ Anker is een webapp met twee kanten. Els plant de dag op haar gsm. Maria ziet di
 
 | Pagina | URL | Inhoud |
 | --- | --- | --- |
-| Home | `/` | Wat Anker is, "Waarom wij dit bouwen", het probleem met cijfers, hoe het werkt, Maria en Els, knoppen naar beide schermen. Bovenaan een live mini-versie van het wandscherm |
+| Home | `/` | Alleen de hero: "Houvast voor wie de tijd kwijt is", wat Anker is, knoppen naar beide schermen en een live mini-versie van het wandscherm |
 | Privacybeleid | `/privacy` | Welke gegevens, waar ze staan (demo: op je toestel, met Supabase: in Supabase), cookies (geen), diensten van derden, je rechten |
 | Gebruiksvoorwaarden | `/voorwaarden` | Prototype, geen medisch hulpmiddel, geen garanties, aansprakelijkheid, Belgisch recht |
 | Wandscherm | `/vandaag` | Het scherm van Maria (tablet aan de muur) |
 | Mantelzorger | `/plan` | De plan-app van Els (gsm) |
 
-Elke pagina heeft onderaan dezelfde footer: logo, korte omschrijving, Pagina's, Voor wie en Project. Er staan geen contactgegevens, adres, ondernemingsnummer of sociale media in. Home en Mantelzorger hebben bovenaan een menubalk. Het wandscherm niet, want dat moet rustig blijven.
+Home, Privacybeleid en Gebruiksvoorwaarden hebben onderaan een footer: logo, korte omschrijving, Pagina's, Juridisch en Project. Het wandscherm en de mantelzorger-app hebben geen footer. Er staan geen contactgegevens, adres, ondernemingsnummer of sociale media in. Alle pagina's behalve het wandscherm hebben bovenaan een menubalk. Het wandscherm niet, want dat moet rustig blijven.
 
 ### Wandscherm van Maria (`/vandaag`)
 
