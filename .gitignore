@@ -21,8 +21,8 @@ coverage/
 *.log
 npm-debug.log*
 
-# Claude Code (local only; settings.json and rules stay versioned)
-.claude/settings.local.json
+# Claude Code (local only, never pushed)
+.claude/
 
 # OS / editor
 .DS_Store
