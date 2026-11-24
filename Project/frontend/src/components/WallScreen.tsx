@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { today, dagdeel, momentSentence, formatClock, formatDate, type State, type Slot, type Item } from '../lib/day';
 import type { Key } from '../lib/i18n';
@@ -44,7 +43,6 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
   // Visits pass by themselves; only what someone ticked off can be undone.
   const canUndo = (s: Slot) => ticked[s.id] !== undefined;
   const [undo, setUndo] = useState<Slot | null>(null);
-  const [editName, setEditName] = useState(false);
   const [adding, setAdding] = useState(false);
   const [visitor, setVisitor] = useState<Slot | null>(null);
 
@@ -210,11 +208,6 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
       </div>
 
       <nav className="wall-foot" aria-label={tx('wall.settings')}>
-        {name && (
-          <button className="wall-link" onClick={() => setEditName(true)}>
-            {tx('wall.editName')}
-          </button>
-        )}
         <div className="wall-size" role="group" aria-label={tx('wall.sizeGroup')}>
           <span>{tx('wall.sizeLabel')}</span>
           {FONT_SCALES.map((f) => (
@@ -223,12 +216,6 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
             </button>
           ))}
         </div>
-        <Link className="wall-link" href="/plan">
-          {tx('wall.forCaregiver')}
-        </Link>
-        <Link className="wall-link" href="/">
-          {tx('wall.about')}
-        </Link>
         <LangSwitch wall />
       </nav>
 
@@ -275,21 +262,6 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
             </div>
           </div>
         )}
-      </Modal>
-
-      <Modal open={editName} labelledBy="name-title" onClose={() => setEditName(false)}>
-        <p id="name-title" className="confirm-title">
-          {tx('wall.nameTitle')}
-        </p>
-        <NameForm
-          initial={name}
-          submitLabel={tx('common.save')}
-          onSave={(n) => {
-            onName(n);
-            setEditName(false);
-          }}
-          onCancel={() => setEditName(false)}
-        />
       </Modal>
 
       <Modal open={adding} labelledBy="add-title" onClose={() => setAdding(false)}>
