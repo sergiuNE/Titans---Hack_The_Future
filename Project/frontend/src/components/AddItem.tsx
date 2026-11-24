@@ -2,14 +2,9 @@
 
 import { useState, type FormEvent } from 'react';
 import type { Item, Kind } from '../lib/day';
+import { useLang } from './LangProvider';
 
-const KINDS: { value: Kind; label: string }[] = [
-  { value: 'medicijn', label: 'Medicijn' },
-  { value: 'maaltijd', label: 'Maaltijd' },
-  { value: 'bezoek', label: 'Bezoek' },
-  { value: 'afspraak', label: 'Afspraak' },
-  { value: 'taak', label: 'Taak' },
-];
+const KINDS: Kind[] = ['medicijn', 'maaltijd', 'bezoek', 'afspraak', 'taak'];
 
 /** Shrink a photo to a small JPEG data URL so it fits in localStorage. */
 async function toThumb(file: File): Promise<string> {
@@ -23,6 +18,7 @@ async function toThumb(file: File): Promise<string> {
 }
 
 export function AddItem({ onAdd, today, name }: { onAdd: (item: Omit<Item, 'id'>) => void; today: string; name: string }) {
+  const { t } = useLang();
   const [kind, setKind] = useState<Kind>('medicijn');
   const [time, setTime] = useState('09:00');
   const [title, setTitle] = useState('');
@@ -46,22 +42,22 @@ export function AddItem({ onAdd, today, name }: { onAdd: (item: Omit<Item, 'id'>
       setPhoto(await toThumb(file));
       setError('');
     } catch {
-      setError('Deze foto kan niet gelezen worden. Kies een JPG of PNG.');
+      setError(t('add.errPhoto'));
     }
   }
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    const t = title.trim();
-    if (!t) return setError(kind === 'bezoek' ? 'Schrijf wie er komt, bv. “Lisa komt op bezoek”.' : 'Schrijf wat er moet gebeuren.');
-    if (!/^\d{2}:\d{2}$/.test(time)) return setError('Kies een uur.');
-    if (!daily && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today)) return setError('Kies vandaag of een dag later.');
+    const text = title.trim();
+    if (!text) return setError(kind === 'bezoek' ? t('add.errTitleVisit') : t('add.errTitle'));
+    if (!/^\d{2}:\d{2}$/.test(time)) return setError(t('add.errTime'));
+    if (!daily && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today)) return setError(t('add.errDate'));
     const w = who.trim();
     const r = relation.trim();
     onAdd({
       kind,
       time,
-      title: t,
+      title: text,
       ...(daily ? {} : { date }),
       ...(photo ? { photo } : {}),
       ...(kind === 'bezoek' && w ? { who: w } : {}),
@@ -78,11 +74,11 @@ export function AddItem({ onAdd, today, name }: { onAdd: (item: Omit<Item, 'id'>
   return (
     <form className="add" onSubmit={submit} noValidate>
       <fieldset className="kinds">
-        <legend>Soort</legend>
+        <legend>{t('add.kind')}</legend>
         {KINDS.map((k) => (
-          <label key={k.value} className={kind === k.value ? 'on' : ''}>
-            <input type="radio" name="kind" value={k.value} checked={kind === k.value} onChange={() => pickKind(k.value)} />
-            {k.label}
+          <label key={k} className={kind === k ? 'on' : ''}>
+            <input type="radio" name="kind" value={k} checked={kind === k} onChange={() => pickKind(k)} />
+            {t(`kind.${k}`)}
           </label>
         ))}
       </fieldset>
@@ -90,22 +86,20 @@ export function AddItem({ onAdd, today, name }: { onAdd: (item: Omit<Item, 'id'>
       <div className="add-row">
         {!daily && (
           <label className="add-date">
-            Datum
+            {t('add.date')}
             <input type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)} required />
           </label>
         )}
         <label className="add-time">
-          Uur
+          {t('add.time')}
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
         </label>
         <label className="add-title">
-          {kind === 'bezoek' ? 'Wie komt er?' : 'Wat moet er gebeuren?'}
+          {kind === 'bezoek' ? t('add.whoComes') : t('add.what')}
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={
-              { bezoek: 'Tom komt koffie drinken', medicijn: 'Middagpillen', afspraak: 'Kapper', maaltijd: 'Avondeten', taak: 'Planten water geven' }[kind]
-            }
+            placeholder={t(`add.ph.${kind}`)}
             maxLength={60}
             aria-invalid={!!error && !title.trim()}
             aria-describedby={error ? 'add-error' : undefined}
@@ -116,33 +110,33 @@ export function AddItem({ onAdd, today, name }: { onAdd: (item: Omit<Item, 'id'>
       {kind === 'bezoek' && (
         <div className="add-row">
           <label className="add-title">
-            Naam (voor “Wie is dit?”, mag leeg)
-            <input value={who} onChange={(e) => setWho(e.target.value)} placeholder="Tom" maxLength={30} autoComplete="off" />
+            {t('add.visitorName')}
+            <input value={who} onChange={(e) => setWho(e.target.value)} placeholder={t('add.visitorNamePh')} maxLength={30} autoComplete="off" />
           </label>
           <label className="add-title">
-            Wie is dit voor {name}? (mag leeg)
-            <input value={relation} onChange={(e) => setRelation(e.target.value)} placeholder="je zoon" maxLength={40} autoComplete="off" />
+            {t('add.relation', { name })}
+            <input value={relation} onChange={(e) => setRelation(e.target.value)} placeholder={t('add.relationPh')} maxLength={40} autoComplete="off" />
           </label>
         </div>
       )}
 
       {kind === 'bezoek' && (
         <label className="add-photo">
-          {photo ? <img src={photo} alt="Gekozen foto" width={56} height={56} /> : <span className="ph" aria-hidden="true" />}
-          <span>{photo ? 'Andere foto kiezen' : 'Foto toevoegen (zo herkent je naaste wie er komt)'}</span>
+          {photo ? <img src={photo} alt={t('add.photoAlt')} width={56} height={56} /> : <span className="ph" aria-hidden="true" />}
+          <span>{photo ? t('add.photoOther') : t('add.photoAdd')}</span>
           <input type="file" accept="image/*" onChange={(e) => pickPhoto(e.target.files?.[0])} className="sr-only" />
         </label>
       )}
 
       <label className="add-daily">
         <input type="checkbox" checked={daily} onChange={(e) => setDaily(e.target.checked)} />
-        Elke dag herhalen
+        {t('add.daily')}
       </label>
 
       {kind !== 'bezoek' && (
         <label className="add-daily">
           <input type="checkbox" checked={important} onChange={(e) => setImportant(e.target.checked)} />
-          Belangrijk: waarschuw me als het een uur later nog openstaat
+          {t('add.important')}
         </label>
       )}
 
@@ -151,7 +145,7 @@ export function AddItem({ onAdd, today, name }: { onAdd: (item: Omit<Item, 'id'>
           {error}
         </p>
       )}
-      <button className="primary">Toevoegen</button>
+      <button className="primary">{t('add.submit')}</button>
     </form>
   );
 }

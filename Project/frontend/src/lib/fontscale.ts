@@ -3,11 +3,7 @@ import { useCallback, useState } from 'react';
 
 export type FontScale = 'normaal' | 'groter' | 'grootst';
 
-export const FONT_SCALES: { value: FontScale; label: string }[] = [
-  { value: 'normaal', label: 'Normaal' },
-  { value: 'groter', label: 'Groter' },
-  { value: 'grootst', label: 'Grootst' },
-];
+export const FONT_SCALES: FontScale[] = ['normaal', 'groter', 'grootst'];
 
 export const FONT_KEY = 'anker:fontscale';
 

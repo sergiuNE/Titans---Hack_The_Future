@@ -2,10 +2,12 @@
 
 // Screens shown before the real app when Supabase is on: login, first circle, tablet pairing, no connection.
 import { useState, type FormEvent } from 'react';
+import { LangSwitch, useLang } from './LangProvider';
 import { createCircle, normalizeCode, pairTablet, signInWithPassword, signUpWithPassword } from '../lib/access';
 
 /** Caregiver: sign in, or make an account. After a sign in the session provider takes over. */
 export function LoginScreen() {
+  const { t } = useLang();
   const [mode, setMode] = useState<'in' | 'up'>('in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,32 +17,32 @@ export function LoginScreen() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!email.trim() || !password) return setMessage('Vul je e-mailadres en wachtwoord in.');
-    if (signUp && password.length < 6) return setMessage('Kies een wachtwoord van minstens 6 tekens.');
+    if (!email.trim() || !password) return setMessage(t('gate.errFill'));
+    if (signUp && password.length < 6) return setMessage(t('gate.errShort'));
     setBusy(true);
     setMessage('');
     const result = signUp ? await signUpWithPassword(email.trim(), password) : await signInWithPassword(email.trim(), password);
     setBusy(false);
-    if (result === 'confirm') setMessage('We stuurden je een e-mail. Bevestig je adres en meld je daarna aan.');
-    else if (result === 'wrong') setMessage('Dat e-mailadres of wachtwoord klopt niet. Probeer het nog eens.');
-    else if (result === 'exists') setMessage('Dit e-mailadres heeft al een account. Meld je aan.');
-    else if (result === 'error') setMessage('Dat lukt nu niet. Probeer het zo meteen opnieuw.');
+    if (result === 'confirm') setMessage(t('gate.confirm'));
+    else if (result === 'wrong') setMessage(t('gate.wrong'));
+    else if (result === 'exists') setMessage(t('gate.exists'));
+    else if (result === 'error') setMessage(t('gate.error'));
     // 'ok': the session change moves on to the next screen by itself.
   }
 
   return (
     <main className="care">
       <header className="care-head">
-        <h1>{signUp ? 'Account maken' : 'Aanmelden'}</h1>
-        <p className="care-sub">Voor de mantelzorger. Zo zie je wat er op het wandscherm gebeurt, ook als je er niet bent.</p>
+        <h1>{signUp ? t('gate.signUp') : t('gate.signIn')}</h1>
+        <p className="care-sub">{t('gate.loginSub')}</p>
       </header>
       <form className="add" onSubmit={submit} noValidate>
         <label>
-          E-mailadres
+          {t('gate.email')}
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
         </label>
         <label>
-          Wachtwoord
+          {t('gate.password')}
           <input
             type="password"
             value={password}
@@ -55,7 +57,7 @@ export function LoginScreen() {
           </p>
         )}
         <button className="primary" disabled={busy}>
-          {signUp ? 'Account maken' : 'Aanmelden'}
+          {signUp ? t('gate.signUp') : t('gate.signIn')}
         </button>
         <button
           type="button"
@@ -65,7 +67,7 @@ export function LoginScreen() {
             setMessage('');
           }}
         >
-          {signUp ? 'Ik heb al een account' : 'Account maken'}
+          {signUp ? t('gate.haveAccount') : t('gate.signUp')}
         </button>
       </form>
     </main>
@@ -74,6 +76,7 @@ export function LoginScreen() {
 
 /** Signed in, but no circle yet: ask who the caregiver cares for. */
 export function CreateCircleScreen({ onDone, onSignOut }: { onDone: () => Promise<void>; onSignOut: () => void }) {
+  const { t } = useLang();
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -81,25 +84,25 @@ export function CreateCircleScreen({ onDone, onSignOut }: { onDone: () => Promis
   async function submit(e: FormEvent) {
     e.preventDefault();
     const n = name.trim();
-    if (!n) return setMessage('Schrijf de voornaam van je naaste.');
+    if (!n) return setMessage(t('gate.circleErr'));
     setBusy(true);
     setMessage('');
     const ok = await createCircle(n);
     if (ok) await onDone();
-    else setMessage('Dat lukt nu niet. Probeer het zo meteen opnieuw.');
+    else setMessage(t('gate.error'));
     setBusy(false);
   }
 
   return (
     <main className="care">
       <header className="care-head">
-        <h1>Voor wie zorg je?</h1>
-        <p className="care-sub">Deze naam staat in de begroeting op het wandscherm.</p>
+        <h1>{t('gate.circleTitle')}</h1>
+        <p className="care-sub">{t('gate.circleSub')}</p>
       </header>
       <form className="add" onSubmit={submit} noValidate>
         <label>
-          Voornaam van je naaste
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="bv. Maria" maxLength={30} autoComplete="off" autoFocus />
+          {t('gate.circleName')}
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('care.namePlaceholder')} maxLength={30} autoComplete="off" autoFocus />
         </label>
         {message && (
           <p className="add-error" role="alert">
@@ -107,10 +110,10 @@ export function CreateCircleScreen({ onDone, onSignOut }: { onDone: () => Promis
           </p>
         )}
         <button className="primary" disabled={busy}>
-          Verder
+          {t('gate.next')}
         </button>
         <button type="button" className="link-btn" onClick={onSignOut}>
-          Afmelden
+          {t('common.signOut')}
         </button>
       </form>
     </main>
@@ -119,20 +122,21 @@ export function CreateCircleScreen({ onDone, onSignOut }: { onDone: () => Promis
 
 /** Tablet: type the code from the family. Calm, one input, one button. */
 export function PairScreen({ onDone }: { onDone: () => Promise<void> }) {
+  const { t } = useLang();
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (normalizeCode(code).length !== 6) return setMessage('De code heeft 6 tekens. Kijk nog even bij je familie.');
+    if (normalizeCode(code).length !== 6) return setMessage(t('gate.pairErrLength'));
     setBusy(true);
     setMessage('');
     const result = await pairTablet(code);
     if (result === 'ok') await onDone();
-    else if (result === 'wrong') setMessage('Die code ken ik nog niet. Kijk de code nog eens na en probeer opnieuw.');
-    else if (result === 'wait') setMessage('Even rusten. Probeer het over een kwartier opnieuw.');
-    else setMessage('Het koppelen lukt nu even niet. Probeer het zo meteen opnieuw.');
+    else if (result === 'wrong') setMessage(t('gate.pairWrong'));
+    else if (result === 'wait') setMessage(t('gate.pairWait'));
+    else setMessage(t('gate.pairError'));
     setBusy(false);
   }
 
@@ -141,12 +145,12 @@ export function PairScreen({ onDone }: { onDone: () => Promise<void> }) {
       <section className="focus welcome" aria-labelledby="pair-title">
         <div className="focus-text">
           <h1 id="pair-title" className="focus-title">
-            Typ de koppelcode van je familie
+            {t('gate.pairTitle')}
           </h1>
-          <p className="focus-sub">Je familie vindt de code in de Anker-app, onder Instellingen.</p>
+          <p className="focus-sub">{t('gate.pairSub')}</p>
           <form className="big-form" onSubmit={submit} noValidate>
             <label htmlFor="pair-code" className="sr-only">
-              Koppelcode
+              {t('gate.pairLabel')}
             </label>
             <input
               id="pair-code"
@@ -168,22 +172,26 @@ export function PairScreen({ onDone }: { onDone: () => Promise<void> }) {
               </p>
             )}
             <button className="done-btn" disabled={busy}>
-              Koppelen
+              {t('gate.pairSubmit')}
             </button>
           </form>
         </div>
       </section>
+      <nav className="wall-foot" aria-label={t('wall.settings')}>
+        <LangSwitch wall />
+      </nav>
     </main>
   );
 }
 
 /** No connection to the server yet. It tries again on its own. */
 export function OfflineScreen() {
+  const { t } = useLang();
   return (
     <main className="care">
       <header className="care-head">
-        <h1>Even geen verbinding</h1>
-        <p className="care-sub">Anker probeert het zo meteen opnieuw. Er gaat niets verloren.</p>
+        <h1>{t('gate.offlineTitle')}</h1>
+        <p className="care-sub">{t('gate.offlineSub')}</p>
       </header>
     </main>
   );

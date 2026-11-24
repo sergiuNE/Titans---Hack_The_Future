@@ -2,24 +2,24 @@
 
 import Link from 'next/link';
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { today, dagdeel, momentWord, formatClock, formatDate, type State, type Slot, type Item } from '../lib/day';
+import { today, dagdeel, momentSentence, formatClock, formatDate, type State, type Slot, type Item } from '../lib/day';
+import type { Key } from '../lib/i18n';
 import { useWeather, weatherTip, type Sky } from '../lib/weather';
 import { FONT_SCALES, useFontScale } from '../lib/fontscale';
 import { KindIcon } from './KindIcon';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Modal } from './Modal';
 import { DayPlanner } from './DayPlanner';
-
-const greeting = { ochtend: 'Goedemorgen', middag: 'Goedemiddag', avond: 'Goedenavond', nacht: 'Goedenacht' };
+import { LangSwitch, useLang } from './LangProvider';
 
 // Say what you did, in your own words: easier to recognise than a generic "OK".
-const doneLabel: Record<Slot['kind'], string> = {
-  medicijn: 'Ik heb ze genomen',
-  maaltijd: 'Ik heb gegeten',
-  afspraak: 'Gedaan',
-  taak: 'Gedaan',
-  bezoek: 'Gedaan',
-};
+const doneLabel = {
+  medicijn: 'wall.done.medicijn',
+  maaltijd: 'wall.done.maaltijd',
+  afspraak: 'wall.done.other',
+  taak: 'wall.done.other',
+  bezoek: 'wall.done.other',
+} as const satisfies Record<Slot['kind'], Key>;
 
 type Props = {
   state: State;
@@ -31,9 +31,10 @@ type Props = {
 
 /** The wall tablet: read at a glance, one big action at a time. */
 export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
+  const { t: tx, tr, lang } = useLang();
   const t = today(state, now);
   const weather = useWeather();
-  const tip = weatherTip(weather, dagdeel(now));
+  const tip = weatherTip(weather, dagdeel(now), lang);
   const [fontScale, setFontScale] = useFontScale();
   const name = state.name.trim();
   // Only the most recent open moment: "Ontbijt" at 23:30 would only confuse. The caregiver sees what was missed.
@@ -52,23 +53,23 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
       <header className="wall-head">
         <div>
           <p className="wall-greet">
-            {greeting[dagdeel(now)]}
+            {tx(`greet.${dagdeel(now)}`)}
             {name ? `, ${name}` : ''}.
           </p>
-          <h1 className="wall-moment">Het is {momentWord(now)}.</h1>
+          <h1 className="wall-moment">{momentSentence(now, lang)}</h1>
           <p className="wall-date">
-            {formatDate(now)}
+            {formatDate(now, lang)}
             {weather && (
               <span className="wall-weather">
                 <WeatherIcon sky={weather.sky} />
-                {weather.temp}° {weather.label}
+                {weather.temp}° {tx(`sky.${weather.sky}`)}
               </span>
             )}
           </p>
           {tip && <p className="wall-tip">{tip}</p>}
         </div>
         <time className="wall-clock" dateTime={new Date(now).toISOString()}>
-          {formatClock(now)}
+          {formatClock(now, lang)}
         </time>
       </header>
 
@@ -76,12 +77,12 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
         <section className="focus welcome" aria-labelledby="welcome-title">
           <div className="focus-text">
             <p id="welcome-title" className="focus-title">
-              Welkom bij Anker. Hoe heet je?
+              {tx('wall.welcome')}
             </p>
-            <p className="focus-sub">Dan kan het scherm je elke dag bij naam begroeten.</p>
+            <p className="focus-sub">{tx('wall.welcomeSub')}</p>
             <NameForm
               initial=""
-              submitLabel="Bewaar mijn naam"
+              submitLabel={tx('wall.saveName')}
               onSave={(n) => {
                 onName(n);
                 setAdding(true); // next step: plan the day
@@ -95,43 +96,43 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
             <>
               <KindIcon item={focus} size={88} />
               <div className="focus-text">
-                <p className="focus-label">Nu doen</p>
+                <p className="focus-label">{tx('wall.now')}</p>
                 <p className="focus-title">{focus.title}</p>
-                <p className="focus-sub">Gepland om {focus.time}</p>
+                <p className="focus-sub">{tx('wall.plannedAt', { time: focus.time })}</p>
               </div>
               <button className="done-btn" onClick={() => onToggle(focus.id)}>
                 <CheckIcon />
-                {doneLabel[focus.kind]}
+                {tx(doneLabel[focus.kind])}
               </button>
             </>
           ) : t.slots.length === 0 ? (
             <>
               <div className="focus-text">
-                <p className="focus-title">Nog niets gepland voor vandaag.</p>
-                <p className="focus-sub">Kies een datum en schrijf wat er moet gebeuren.</p>
+                <p className="focus-title">{tx('wall.noneToday')}</p>
+                <p className="focus-sub">{tx('wall.noneTodaySub')}</p>
               </div>
               <button className="done-btn" onClick={() => setAdding(true)}>
-                <span aria-hidden="true">+</span> Plan je dag
+                <span aria-hidden="true">+</span> {tx('wall.planDay')}
               </button>
             </>
           ) : dagdeel(now) === 'nacht' ? (
             <div className="focus-text">
-              <p className="focus-title">Het is nacht. Slaap zacht.</p>
-              <p className="focus-sub">Morgen staat alles hier weer klaar.</p>
+              <p className="focus-title">{tx('wall.nightTitle')}</p>
+              <p className="focus-sub">{tx('wall.nightSub')}</p>
             </div>
           ) : next ? (
             <>
               <Visitor item={next} size={88} onOpen={setVisitor} />
               <div className="focus-text">
-                <p className="focus-label">Straks, om {next.time}</p>
+                <p className="focus-label">{tx('wall.later', { time: next.time })}</p>
                 <p className="focus-title">{next.title}</p>
-                <p className="focus-sub">Je hoeft nu niets te doen.</p>
+                <p className="focus-sub">{tx('wall.nothingNow')}</p>
               </div>
             </>
           ) : (
             <div className="focus-text">
-              <p className="focus-title">Alles is gedaan voor vandaag.</p>
-              <p className="focus-sub">Je hoeft niets meer te doen. Rustig aan.</p>
+              <p className="focus-title">{tx('wall.allDone')}</p>
+              <p className="focus-sub">{tx('wall.allDoneSub')}</p>
             </div>
           )}
         </section>
@@ -139,7 +140,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
 
       {t.meds.length > 0 && (
         <section className="pills" aria-labelledby="pills-title">
-          <h2 id="pills-title">Je pillen van vandaag</h2>
+          <h2 id="pills-title">{tx('wall.pillsTitle')}</h2>
           <ul>
             {t.meds.map((m) => (
               <li key={m.id} className={m.state === 'done' ? 'taken' : ''}>
@@ -149,7 +150,11 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
                 <span>
                   <strong>{m.title}</strong>
                   <span className="pill-when">
-                    {m.state === 'done' ? `Genomen om ${formatClock(m.doneAt!)}` : m.state === 'open' ? 'Nog niet genomen' : `Om ${m.time}`}
+                    {m.state === 'done'
+                      ? tx('wall.pillTaken', { time: formatClock(m.doneAt!, lang) })
+                      : m.state === 'open'
+                        ? tx('wall.pillNotYet')
+                        : tx('wall.pillAt', { time: m.time })}
                   </span>
                 </span>
               </li>
@@ -160,9 +165,9 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
 
       <div className="wall-cols">
         <section aria-labelledby="done-title">
-          <h2 id="done-title">Al gebeurd vandaag</h2>
+          <h2 id="done-title">{tx('wall.doneTitle')}</h2>
           {t.done.length === 0 ? (
-            <p className="quiet">Nog niets.</p>
+            <p className="quiet">{tx('wall.nothingYet')}</p>
           ) : (
             <ul className="wall-list">
               {t.done.map((s) => (
@@ -171,11 +176,11 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
                   <Visitor item={s} size={36} onOpen={setVisitor} />
                   <span className="what">
                     {s.title}
-                    {canUndo(s) && <span className="when">Gedaan om {formatClock(ticked[s.id])}</span>}
+                    {canUndo(s) && <span className="when">{tx('wall.doneAt', { time: formatClock(ticked[s.id], lang) })}</span>}
                   </span>
                   {canUndo(s) && (
-                    <button className="undo" onClick={() => setUndo(s)} aria-label={`${s.title}: toch niet gedaan`}>
-                      Toch niet
+                    <button className="undo" onClick={() => setUndo(s)} aria-label={tx('wall.undoAria', { title: s.title })}>
+                      {tx('wall.undo')}
                     </button>
                   )}
                 </li>
@@ -184,9 +189,9 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
           )}
         </section>
         <section aria-labelledby="later-title">
-          <h2 id="later-title">Nog te komen</h2>
+          <h2 id="later-title">{tx('wall.laterTitle')}</h2>
           {t.later.length === 0 ? (
-            <p className="quiet">Niets meer gepland.</p>
+            <p className="quiet">{tx('wall.nothingLeft')}</p>
           ) : (
             <ul className="wall-list">
               {t.later.map((s) => (
@@ -199,31 +204,32 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
             </ul>
           )}
           <button className="wall-add" onClick={() => setAdding(true)}>
-            <span aria-hidden="true">+</span> Dag plannen
+            <span aria-hidden="true">+</span> {tx('wall.addDay')}
           </button>
         </section>
       </div>
 
-      <nav className="wall-foot" aria-label="Instellingen">
+      <nav className="wall-foot" aria-label={tx('wall.settings')}>
         {name && (
           <button className="wall-link" onClick={() => setEditName(true)}>
-            Naam aanpassen
+            {tx('wall.editName')}
           </button>
         )}
-        <div className="wall-size" role="group" aria-label="Lettergrootte">
-          <span>Tekst:</span>
+        <div className="wall-size" role="group" aria-label={tx('wall.sizeGroup')}>
+          <span>{tx('wall.sizeLabel')}</span>
           {FONT_SCALES.map((f) => (
-            <button key={f.value} className="wall-link" aria-pressed={fontScale === f.value} onClick={() => setFontScale(f.value)}>
-              {f.label}
+            <button key={f} className="wall-link" aria-pressed={fontScale === f} onClick={() => setFontScale(f)}>
+              {tx(`wall.size.${f}`)}
             </button>
           ))}
         </div>
         <Link className="wall-link" href="/plan">
-          Voor de mantelzorger
+          {tx('wall.forCaregiver')}
         </Link>
         <Link className="wall-link" href="/">
-          Over Anker
+          {tx('wall.about')}
         </Link>
+        <LangSwitch wall />
       </nav>
 
       <ConfirmDialog
@@ -231,14 +237,14 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
         title={
           undo && (
             <>
-              Je tikte om <strong>{formatClock(ticked[undo.id] ?? now)}</strong> dat “{undo.title}” gedaan was.
+              {tr('wall.undoText', { time: <strong>{formatClock(ticked[undo.id] ?? now, lang)}</strong>, title: undo.title })}
               <br />
-              Is het toch nog niet gedaan?
+              {tx('wall.undoAsk')}
             </>
           )
         }
-        cancelLabel="Nee, het is gedaan"
-        confirmLabel="Ja, nog niet gedaan"
+        cancelLabel={tx('wall.undoNo')}
+        confirmLabel={tx('wall.undoYes')}
         onCancel={() => setUndo(null)}
         onConfirm={() => {
           if (undo) onToggle(undo.id);
@@ -249,7 +255,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
       <Modal open={!!visitor} labelledBy="who-title" onClose={() => setVisitor(null)}>
         {visitor && (
           <div className="who">
-            <p className="who-label">Wie is dit?</p>
+            <p className="who-label">{tx('wall.whoLabel')}</p>
             {visitor.photo ? (
               <img className="avatar who-photo" src={visitor.photo} alt="" />
             ) : (
@@ -261,10 +267,10 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
               {visitor.who || visitor.title}
             </p>
             {visitor.relation && <p className="who-relation">{visitor.relation}</p>}
-            <p className="who-time">Komt om {visitor.time}</p>
+            <p className="who-time">{tx('wall.whoComes', { time: visitor.time })}</p>
             <div className="confirm-actions">
               <button className="confirm-keep" onClick={() => setVisitor(null)} autoFocus>
-                Sluiten
+                {tx('common.close')}
               </button>
             </div>
           </div>
@@ -273,11 +279,11 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
 
       <Modal open={editName} labelledBy="name-title" onClose={() => setEditName(false)}>
         <p id="name-title" className="confirm-title">
-          Hoe heet je?
+          {tx('wall.nameTitle')}
         </p>
         <NameForm
           initial={name}
-          submitLabel="Bewaar"
+          submitLabel={tx('common.save')}
           onSave={(n) => {
             onName(n);
             setEditName(false);
@@ -288,7 +294,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
 
       <Modal open={adding} labelledBy="add-title" onClose={() => setAdding(false)}>
         <p id="add-title" className="confirm-title">
-          Plan je dag
+          {tx('wall.planDay')}
         </p>
         <DayPlanner
           today={t.key}
@@ -300,7 +306,7 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
             setAdding(false);
           }}
           onCancel={() => setAdding(false)}
-          cancelLabel={t.slots.length === 0 ? 'Later' : 'Annuleer'}
+          cancelLabel={t.slots.length === 0 ? tx('plan.later') : tx('common.cancel')}
         />
       </Modal>
     </main>
@@ -309,34 +315,36 @@ export function WallScreen({ state, now, onToggle, onName, onAdd }: Props) {
 
 /** A visitor can be tapped for "Wie is dit?". Everything else is just its icon. */
 function Visitor({ item, size, onOpen }: { item: Slot; size: number; onOpen: (s: Slot) => void }) {
+  const { t: tx } = useLang();
   if (item.kind !== 'bezoek') return <KindIcon item={item} size={size} />;
   return (
-    <button className="who-btn" onClick={() => onOpen(item)} aria-label={`Wie is dit? ${item.who || item.title}`}>
+    <button className="who-btn" onClick={() => onOpen(item)} aria-label={tx('wall.whoAria', { name: item.who || item.title })}>
       <KindIcon item={item} size={size} />
     </button>
   );
 }
 
 function NameForm({ initial, submitLabel, onSave, onCancel }: { initial: string; submitLabel: string; onSave: (n: string) => void; onCancel?: () => void }) {
+  const { t: tx } = useLang();
   const [value, setValue] = useState(initial);
   const [error, setError] = useState('');
   function submit(e: FormEvent) {
     e.preventDefault();
     const v = value.trim();
-    if (!v) return setError('Schrijf je voornaam.');
+    if (!v) return setError(tx('wall.nameError'));
     onSave(v);
   }
   return (
     <form className="big-form" onSubmit={submit} noValidate>
       <label htmlFor="big-name" className="sr-only">
-        Je naam
+        {tx('wall.nameLabel')}
       </label>
       <input
         id="big-name"
         className="big-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Je voornaam"
+        placeholder={tx('wall.namePlaceholder')}
         maxLength={30}
         autoComplete="given-name"
         autoFocus
@@ -352,7 +360,7 @@ function NameForm({ initial, submitLabel, onSave, onCancel }: { initial: string;
         <button className="confirm-keep">{submitLabel}</button>
         {onCancel && (
           <button type="button" className="confirm-undo" onClick={onCancel}>
-            Annuleer
+            {tx('common.cancel')}
           </button>
         )}
       </div>

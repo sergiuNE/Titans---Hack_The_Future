@@ -1,6 +1,7 @@
 // Current weather from Open-Meteo (free, no key, no personal data sent).
 import { useEffect, useState } from 'react';
 import type { Dagdeel } from './day';
+import { translate, type Lang } from './i18n';
 
 // shortcut: fixed location (Mortsel, where the persona lives); move to a per-circle setting with a real backend.
 const URL =
@@ -8,28 +9,28 @@ const URL =
 
 export type Sky = 'zon' | 'wolk' | 'mist' | 'regen' | 'sneeuw' | 'onweer';
 /** `precip` is the rain falling right now, in mm. */
-export type Weather = { temp: number; sky: Sky; label: string; precip: number };
+export type Weather = { temp: number; sky: Sky; precip: number };
 
 const COLD_BELOW = 8;
 const HOT_ABOVE = 25;
 
 /** One short, warm tip from the weather. Null when there is nothing to say, and always at night and in the evening. */
-export function weatherTip(w: Weather | null, part: Dagdeel): string | null {
+export function weatherTip(w: Weather | null, part: Dagdeel, lang: Lang = 'nl'): string | null {
   if (!w || (part !== 'ochtend' && part !== 'middag')) return null;
-  if (w.sky === 'regen' || w.sky === 'onweer' || w.precip > 0) return 'Het regent. Neem een paraplu mee.';
-  if (w.temp < COLD_BELOW) return 'Het is koud buiten. Neem je warme jas.';
-  if (w.temp > HOT_ABOVE) return 'Het is warm. Drink genoeg water.';
+  if (w.sky === 'regen' || w.sky === 'onweer' || w.precip > 0) return translate(lang, 'tip.rain');
+  if (w.temp < COLD_BELOW) return translate(lang, 'tip.cold');
+  if (w.temp > HOT_ABOVE) return translate(lang, 'tip.hot');
   return null;
 }
 
-/** WMO weather code to a plain Dutch word. */
-export function describe(code: number): { sky: Sky; label: string } {
-  if (code <= 1) return { sky: 'zon', label: 'Zonnig' };
-  if (code <= 3) return { sky: 'wolk', label: 'Bewolkt' };
-  if (code === 45 || code === 48) return { sky: 'mist', label: 'Mistig' };
-  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return { sky: 'sneeuw', label: 'Sneeuw' };
-  if (code >= 95) return { sky: 'onweer', label: 'Onweer' };
-  return { sky: 'regen', label: 'Regen' };
+/** WMO weather code to a sky. The word for it is `sky.<sky>` in the dictionaries. */
+export function describe(code: number): { sky: Sky } {
+  if (code <= 1) return { sky: 'zon' };
+  if (code <= 3) return { sky: 'wolk' };
+  if (code === 45 || code === 48) return { sky: 'mist' };
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return { sky: 'sneeuw' };
+  if (code >= 95) return { sky: 'onweer' };
+  return { sky: 'regen' };
 }
 
 /** Refreshes every 30 minutes. Returns null while loading or when offline: the screen then simply shows no weather. */

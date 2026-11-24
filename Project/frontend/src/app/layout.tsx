@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Lexend } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { LangProvider } from '../components/LangProvider';
 import { DayProvider } from '../components/DayProvider';
 import { SiteChrome } from '../components/SiteChrome';
 import '../styles.css';
@@ -19,9 +20,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="nl" className={lexend.variable}>
       <body>
-        <DayProvider>
-          <SiteChrome>{children}</SiteChrome>
-        </DayProvider>
+        <LangProvider>
+          <DayProvider>
+            <SiteChrome>{children}</SiteChrome>
+          </DayProvider>
+        </LangProvider>
       </body>
     </html>
   );

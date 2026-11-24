@@ -70,6 +70,10 @@ Home, Privacybeleid en Gebruiksvoorwaarden hebben onderaan een footer: logo, kor
 - **Zorgkring:** nodigt familie uit (bv. Tom), zodat iedereen hetzelfde overzicht heeft. In de demo is dit gemockt: er wordt nog niets verstuurd.
 - **Demo: spring in de tijd** (08:35, 15:00, 20:00, 23:30, +1 uur), zodat de hele dag in een paar minuten te tonen is. Het wandscherm springt mee.
 
+## Talen
+
+Anker is beschikbaar in het Nederlands (standaard), Frans en Engels. De taal kies je per toestel: met "NL · FR · EN" in de menubalk, of onderaan het wandscherm (naast de tekstgrootte). De keuze staat in `localStorage` (`anker:lang`) en wordt niet gesynchroniseerd, dus de tablet van Maria kan Frans zijn terwijl Els Nederlands gebruikt. Alle teksten staan in `Project/frontend/src/lib/i18n.ts`. Gebruikersgegevens (titels van taken, namen) worden niet vertaald. De voorbeelddag wordt geladen in de gekozen taal.
+
 ## Demoscript
 
 1. Open `/vandaag` en `/plan` naast elkaar in dezelfde browser.

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabaseEnabled } from '../lib/supabase';
 import { useDay } from './DayProvider';
+import { useLang } from './LangProvider';
 import { Home } from './Home';
 import { WallScreen } from './WallScreen';
 import { CaregiverView } from './CaregiverView';
@@ -10,6 +11,7 @@ import { CreateCircleScreen, LoginScreen, OfflineScreen, PairScreen } from './Ga
 
 /** Neutral screen while the saved state loads, so nothing wrong flashes. */
 function Loading({ patient = false }: { patient?: boolean }) {
+  const { t } = useLang();
   // Wall screen with Supabase: if the first load is still not there after a few seconds (no internet), say so calmly.
   // The store and the access check keep retrying on their own.
   const [slow, setSlow] = useState(false);
@@ -19,10 +21,10 @@ function Loading({ patient = false }: { patient?: boolean }) {
     return () => clearTimeout(id);
   }, [patient]);
   return (
-    <main className="loading" aria-busy="true" aria-label="Laden">
+    <main className="loading" aria-busy="true" aria-label={t('common.loading')}>
       {slow && (
         <p className="loading-note" role="status">
-          Even geduld, Anker zoekt verbinding.
+          {t('common.slowLoad')}
         </p>
       )}
     </main>
@@ -48,6 +50,7 @@ export function WallPage() {
 
 export function PlanPage() {
   const day = useDay();
+  const { lang } = useLang();
   if (!day) return <Loading />;
   const { dispatch, access } = day;
   if (access.phase === 'error') return <OfflineScreen />;
@@ -70,7 +73,7 @@ export function PlanPage() {
       onName={day.setName}
       onOffset={(o) => dispatch({ type: 'setOffset', offset: o })}
       onInvite={(member) => dispatch({ type: 'invite', member })}
-      onDemo={() => dispatch({ type: 'loadDemo' })}
+      onDemo={() => dispatch({ type: 'loadDemo', lang })}
       onReset={() => dispatch({ type: 'reset' })}
       pairCode={access.phase === 'ready' ? access.circle.pair_code : undefined}
       onSignOut={access.phase === 'ready' ? day.signOut : undefined}

@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { today, dagdeel, momentWord, dateKey, overview, isEvening, type State } from './day';
+import { today, dagdeel, momentWord, momentSentence, dateKey, overview, isEvening, type State } from './day';
 import { reducer } from './store';
 import { describe as describeWeather } from './weather';
+import { translate } from './i18n';
 
 describe('weather', () => {
   it('maps WMO codes to plain words', () => {
-    expect(describeWeather(0).label).toBe('Zonnig');
-    expect(describeWeather(3).label).toBe('Bewolkt');
-    expect(describeWeather(61).label).toBe('Regen');
-    expect(describeWeather(73).label).toBe('Sneeuw');
+    const label = (code: number) => translate('nl', `sky.${describeWeather(code).sky}`);
+    expect(label(0)).toBe('Zonnig');
+    expect(label(3)).toBe('Bewolkt');
+    expect(label(61)).toBe('Regen');
+    expect(label(73)).toBe('Sneeuw');
   });
 });
 
@@ -60,6 +62,15 @@ describe('moment', () => {
     expect(dagdeel(new Date(2026, 10, 24, 2, 0).getTime())).toBe('nacht');
     expect(momentWord(now)).toBe('dinsdagmiddag');
   });
+
+  it('says the moment in every language', () => {
+    expect(momentSentence(now)).toBe('Het is dinsdagmiddag.');
+    expect(momentSentence(now, 'fr')).toBe('Nous sommes mardi après-midi.');
+    expect(momentSentence(now, 'en')).toBe('It is Tuesday afternoon.');
+    const night = new Date(2026, 10, 24, 2, 0).getTime();
+    expect(momentWord(night, 'fr')).toBe('mardi nuit');
+    expect(momentWord(new Date(2026, 10, 24, 8, 0).getTime(), 'en')).toBe('Tuesday morning');
+  });
 });
 
 describe('reducer', () => {
@@ -81,6 +92,14 @@ describe('reducer', () => {
   it('invites a family member once', () => {
     const once = reducer(state, { type: 'invite', member: 'Tom' });
     expect(reducer(once, { type: 'invite', member: 'Tom' }).circle).toEqual(['Tom']);
+  });
+
+  it('loads the demo day in the chosen language', () => {
+    const fr = reducer(state, { type: 'loadDemo', lang: 'fr' });
+    const en = reducer(state, { type: 'loadDemo', lang: 'en' });
+    expect(fr.items[0].title).toBe('Petit-déjeuner');
+    expect(en.items[0].title).toBe('Breakfast');
+    expect(reducer(state, { type: 'loadDemo' }).items[0].title).toBe('Ontbijt');
   });
 
   it('shifts the demo clock', () => {

@@ -57,6 +57,17 @@ Anything that uses state, effects, `localStorage`, the clock or `window` is a cl
 - **Overview card** "Vandaag bij <name>": `overview(slots)` and `isEvening(now)` from `day.ts`. "5 van 6 momenten gedaan", plus what is still open (open and later), important ones flagged. From 18:00 (avond, nacht) it is large with a list, earlier it is a small summary.
 - "Alles wissen" says "van dit toestel" in local mode; with Supabase it says the plan is cleared for everyone.
 
+## Languages (i18n)
+
+Dutch (default), French and English. No library: `lib/i18n.ts` holds the typed dictionaries `nl`, `fr`, `en` and `translate(lang, key, vars)`. `components/LangProvider.tsx` holds the language and gives `useLang()` → `{ lang, setLang, t, tr }` (`tr` takes elements as placeholder values, e.g. a `<strong>` around a time). The choice is stored per device in `localStorage` (`anker:lang`), never synced and not in `State`. It is read after mount (Dutch until then, no hydration mismatch) and sets `<html lang>`. `LangSwitch` sits in `SiteHeader` ("NL · FR · EN", `aria-current` on the active one) and at the bottom of the wall screen and the pairing screen (full names, 56px targets).
+
+- **Every new text goes into all three dictionaries.** TypeScript errors when `fr` or `en` misses a key of `nl`, and `i18n.test.ts` checks the same keys, no empty text and the same `{placeholders}`.
+- No visible text, `aria-label`, `alt` or error message in a component or in `lib` as a string literal: use `t('key')`.
+- Dates and times go through Intl with the locale of the language (`nl-BE`, `fr-BE`, `en-GB`): pass `lang` to `momentWord`, `momentSentence`, `formatClock`, `formatDate`, `weatherTip`. `day.ts` stays pure: the language is an argument.
+- French: "tu" on the wall screen, "vous" on the caregiver view, the marketing and legal pages. Never blaming: no "late" or "en retard" on the wall screen.
+- User data (item titles, names) is not translated. The demo day (`loadDemo` carries `lang`) is stored with titles in the language it was loaded in.
+- Page titles (`metadata` in `app/*/page.tsx`) and the meta description stay Dutch: they are set on the server and a client-side `document.title` update would fight Next's own title handling.
+
 ## Rules
 
 - Components never touch `localStorage` or compute statuses. They get data from `today()` and call callbacks. Logic lives in `src/lib`.

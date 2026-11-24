@@ -1,4 +1,5 @@
 // Pure day logic: no React, no storage. Time is always passed in.
+import { LOCALES, translate, type Lang } from './i18n';
 
 export type Kind = 'medicijn' | 'maaltijd' | 'bezoek' | 'afspraak' | 'taak';
 
@@ -66,18 +67,29 @@ export function dagdeel(now: number): Dagdeel {
   return 'nacht';
 }
 
-/** "dinsdagmiddag" */
-export function momentWord(now: number): string {
-  const day = new Date(now).toLocaleDateString('nl-BE', { weekday: 'long' });
-  return `${day}${dagdeel(now)}`;
+/** "dinsdagmiddag", "mardi après-midi", "Tuesday afternoon" */
+export function momentWord(now: number, lang: Lang = 'nl'): string {
+  const day = new Date(now).toLocaleDateString(LOCALES[lang], { weekday: 'long' });
+  const part = translate(lang, `dagdeel.${dagdeel(now)}` as const);
+  return lang === 'nl' ? `${day}${part}` : `${day} ${part}`;
 }
 
-export function formatClock(ts: number): string {
-  return new Date(ts).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+/** "Het is dinsdagmiddag." / "Nous sommes mardi après-midi." / "It is Tuesday afternoon." */
+export function momentSentence(now: number, lang: Lang = 'nl'): string {
+  return translate(lang, 'moment.sentence', { moment: momentWord(now, lang) });
 }
 
-export function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' });
+export function formatClock(ts: number, lang: Lang = 'nl'): string {
+  return new Date(ts).toLocaleTimeString(LOCALES[lang], { hour: '2-digit', minute: '2-digit' });
+}
+
+export function formatDate(ts: number, lang: Lang = 'nl'): string {
+  return new Date(ts).toLocaleDateString(LOCALES[lang], { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/** "2026-11-25" -> "woensdag 25 november" */
+export function formatDayKey(key: string, lang: Lang = 'nl'): string {
+  return new Date(key + 'T12:00').toLocaleDateString(LOCALES[lang], { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 /**

@@ -2,6 +2,7 @@
 // Components only dispatch actions.
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { dateKey, type Item, type State } from './day';
+import { translate, type Lang } from './i18n';
 import { supabase, supabaseEnabled } from './supabase';
 import { fetchState, subscribe, write, type Write } from './remote';
 
@@ -13,7 +14,7 @@ export type Action =
   | { type: 'setOffset'; offset: number }
   | { type: 'invite'; member: string }
   | { type: 'replace'; state: State }
-  | { type: 'loadDemo' }
+  | { type: 'loadDemo'; lang?: Lang }
   | { type: 'reset' };
 
 // v3: the app starts empty. Name first, then the day is planned by the user.
@@ -25,23 +26,24 @@ export function seed(): State {
   return { name: '', circle: [], items: [], done: {} };
 }
 
-/** Demo day for Maria (78), planned by her daughter Els. Only loaded on request (demo button). */
-export function demo(now = Date.now()): State {
+/** Demo day for Maria (78), planned by her daughter Els. Only loaded on request (demo button). Titles use `lang`. */
+export function demo(now = Date.now(), lang: Lang = 'nl'): State {
   const today = dateKey(now);
+  const t = (k: 's1' | 's2' | 's3' | 's3rel' | 's4' | 's5' | 's10' | 's6' | 's6rel' | 's7' | 's8' | 's9') => translate(lang, `demo.${k}` as const);
   return {
     name: 'Maria',
     circle: ['Els', 'Tom'],
     items: [
-      { id: 's1', time: '08:00', title: 'Ontbijt', kind: 'maaltijd' },
-      { id: 's2', time: '08:30', title: 'Ochtendpillen', kind: 'medicijn', important: true },
-      { id: 's3', time: '10:00', title: 'Tom belt even', kind: 'bezoek', date: today, who: 'Tom', relation: 'je zoon' },
-      { id: 's4', time: '10:30', title: 'Planten water geven', kind: 'taak' },
-      { id: 's5', time: '12:30', title: 'Middageten', kind: 'maaltijd' },
-      { id: 's10', time: '13:30', title: 'Kapper', kind: 'afspraak', date: today },
-      { id: 's6', time: '15:00', title: 'Lisa komt langs', kind: 'bezoek', date: today, who: 'Lisa', relation: 'thuisverpleging' },
-      { id: 's7', time: '18:00', title: 'Avondeten', kind: 'maaltijd' },
-      { id: 's8', time: '20:00', title: 'Avondpillen', kind: 'medicijn', important: true },
-      { id: 's9', time: '21:00', title: 'Voordeur op slot doen', kind: 'taak', important: true },
+      { id: 's1', time: '08:00', title: t('s1'), kind: 'maaltijd' },
+      { id: 's2', time: '08:30', title: t('s2'), kind: 'medicijn', important: true },
+      { id: 's3', time: '10:00', title: t('s3'), kind: 'bezoek', date: today, who: 'Tom', relation: t('s3rel') },
+      { id: 's4', time: '10:30', title: t('s4'), kind: 'taak' },
+      { id: 's5', time: '12:30', title: t('s5'), kind: 'maaltijd' },
+      { id: 's10', time: '13:30', title: t('s10'), kind: 'afspraak', date: today },
+      { id: 's6', time: '15:00', title: t('s6'), kind: 'bezoek', date: today, who: 'Lisa', relation: t('s6rel') },
+      { id: 's7', time: '18:00', title: t('s7'), kind: 'maaltijd' },
+      { id: 's8', time: '20:00', title: t('s8'), kind: 'medicijn', important: true },
+      { id: 's9', time: '21:00', title: t('s9'), kind: 'taak', important: true },
     ],
     done: {},
   };
@@ -73,7 +75,7 @@ export function reducer(state: State, action: Action): State {
     case 'replace':
       return action.state;
     case 'loadDemo': {
-      const d = demo();
+      const d = demo(Date.now(), action.lang);
       return { ...d, name: state.name.trim() || d.name, offset: state.offset };
     }
     case 'reset':
@@ -106,8 +108,8 @@ const POLL_MS = 30_000;
 const RELOAD_DELAY_MS = 250;
 
 /** The demo day with real UUIDs, because the database needs them. */
-function remoteDemo(prev: State): State {
-  const d = demo();
+function remoteDemo(prev: State, lang?: Lang): State {
+  const d = demo(Date.now(), lang);
   return {
     ...d,
     items: d.items.map((i) => ({ ...i, id: crypto.randomUUID() })),
@@ -257,7 +259,7 @@ export function useDayStore(circleId: string | null = null) {
       if (supabaseEnabled && id) {
         if (a.type === 'add') a = { ...a, id: crypto.randomUUID() };
         if (a.type === 'loadDemo') {
-          const d = remoteDemo(prev);
+          const d = remoteDemo(prev, a.lang);
           a = { type: 'replace', state: d };
           w = { type: 'demo', items: d.items, name: d.name };
         } else {
